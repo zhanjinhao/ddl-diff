@@ -1,0 +1,33 @@
+package cn.addenda.ddldiff.jackson.serializer.diff;
+
+import cn.addenda.ddldiff.bo.EnvContext;
+import cn.addenda.ddldiff.bo.diff.DiffTableIndexType;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+/**
+ * @author addenda
+ * @since 2021/9/13
+ */
+public class DiffTableIndexTypeSerializer extends JsonSerializer<DiffTableIndexType> {
+
+  @Override
+  public void serialize(DiffTableIndexType value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+    if (value == null) {
+      jgen.writeString((String) null);
+      return;
+    }
+
+    Map<String, String> jsonProperties = new HashMap<>();
+    jsonProperties.put(EnvContext.getSourceName(), Optional.ofNullable(value.getSource()).map(Enum::name).orElse(null));
+    jsonProperties.put(EnvContext.getTargetName(), Optional.ofNullable(value.getTarget()).map(Enum::name).orElse(null));
+    jgen.writeObject(jsonProperties);
+  }
+
+}
