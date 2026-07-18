@@ -51,8 +51,8 @@ public class ValueComment implements DiffAble<ValueComment, DiffValueComment> {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    ValueComment valueString = (ValueComment) o;
-    return Objects.equals(value, valueString.value);
+    ValueComment valueComment = (ValueComment) o;
+    return Objects.equals(value, valueComment.value);
   }
 
   @Override

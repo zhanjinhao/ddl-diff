@@ -34,7 +34,6 @@ public class DiffValueBoolean implements Diff {
   }
 
   public static DiffValueBoolean of(boolean source, boolean target) {
-    // 这里为什么不判断source和target是否相等。因为：相等取决于是按runtime还是absolutely对比。
     if (source == target) {
       return NULL;
     }
