@@ -131,4 +131,137 @@ class TestValueName {
     }
   }
 
+  @Test
+  void testDiffDeserializeMissingKeys() {
+    EnvContext.set("uat", "pro");
+    try {
+      DiffValueName diff1 = JacksonUtils.toObj("{\"uat\":\"val\"}", new TypeReference<DiffValueName>() {});
+      Assertions.assertEquals("val", diff1.getSource());
+      Assertions.assertNull(diff1.getTarget());
+
+      DiffValueName diff2 = JacksonUtils.toObj("{\"pro\":\"val\"}", new TypeReference<DiffValueName>() {});
+      Assertions.assertNull(diff2.getSource());
+      Assertions.assertEquals("val", diff2.getTarget());
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
+  @Test
+  void testDeepClone() {
+    Assertions.assertEquals(source, source.deepClone());
+    Assertions.assertNotSame(source, source.deepClone());
+    Assertions.assertEquals(NULL, NULL.deepClone());
+  }
+
+  @Test
+  void testDiffWithNull() {
+    Assertions.assertEquals("{\"source\":\"date\",\"target\":null}", source.absolutelyDiff(null).diff());
+    Assertions.assertEquals("{\"source\":\"date\",\"target\":null}", source.runtimeDiff(null).diff());
+  }
+
+  @Test
+  void testEqualsAndHashCode() {
+    Assertions.assertEquals(source, ValueName.of("date"));
+    Assertions.assertNotEquals(source, target1);
+    Assertions.assertNotEquals(source, NULL);
+    Assertions.assertEquals(source.hashCode(), ValueName.of("date").hashCode());
+  }
+
+  @Test
+  void testToString() {
+    Assertions.assertEquals("date", source.toString());
+    Assertions.assertEquals("time", target1.toString());
+  }
+
+  @Test
+  void testSerializeNullValue() {
+    String json = JacksonUtils.toStr((ValueName) null);
+    Assertions.assertNull(json);
+  }
+
+  @Test
+  void testSerializeValueWithNullContent() {
+    String json = JacksonUtils.toStr(ValueName.of());
+    Assertions.assertEquals("null", json);
+  }
+
+  @Test
+  void testDeserializeNullJson() {
+    ValueName result = JacksonUtils.toObj("null", new TypeReference<ValueName>() {});
+    Assertions.assertEquals(ValueName.of(), result);
+  }
+
+  @Test
+  void testDeserializeNullString() {
+    ValueName result = JacksonUtils.toObj("\"null\"", new TypeReference<ValueName>() {});
+    Assertions.assertEquals(ValueName.of(), result);
+  }
+
+  @Test
+  void testDeserializeEmptyString() {
+    ValueName result = JacksonUtils.toObj("\"\"", new TypeReference<ValueName>() {});
+    Assertions.assertEquals(ValueName.of(), result);
+  }
+
+  @Test
+  void testValueSerializeDeserializeRoundTrip() {
+    ValueName original = ValueName.of("`col_name`");
+    String json = JacksonUtils.toStr(original);
+    Assertions.assertEquals("\"`col_name`\"", json);
+    ValueName restored = JacksonUtils.toObj(json, new TypeReference<ValueName>() {});
+    Assertions.assertEquals(original, restored);
+  }
+
+  @Test
+  void testDiffSerializeNullSource() {
+    EnvContext.set("uat", "pro");
+    try {
+      DiffValueName diff = DiffValueName.of(null, "id");
+      String json = diff.diff();
+      Assertions.assertTrue(json.contains("\"uat\":null"));
+      Assertions.assertTrue(json.contains("\"pro\":\"id\""));
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
+  @Test
+  void testDiffSerializeNullTarget() {
+    EnvContext.set("uat", "pro");
+    try {
+      DiffValueName diff = DiffValueName.of("id", null);
+      String json = diff.diff();
+      Assertions.assertTrue(json.contains("\"uat\":\"id\""));
+      Assertions.assertTrue(json.contains("\"pro\":null"));
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
+  @Test
+  void testDiffSerializeDeserializeRoundTrip() {
+    EnvContext.set("uat", "pro");
+    try {
+      DiffValueName original = DiffValueName.of("`col_a`", "`col_b`");
+      String json = original.diff();
+      Assertions.assertEquals("{\"uat\":\"`col_a`\",\"pro\":\"`col_b`\"}", json);
+      DiffValueName restored = JacksonUtils.toObj(json, new TypeReference<DiffValueName>() {});
+      Assertions.assertEquals(original, restored);
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
+  @Test
+  void testDiffDeserializeJsonNull() {
+    EnvContext.set("uat", "pro");
+    try {
+      DiffValueName result = JacksonUtils.toObj("null", new TypeReference<DiffValueName>() {});
+      Assertions.assertEquals(DiffValueName.NULL, result);
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
 }

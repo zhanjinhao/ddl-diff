@@ -132,4 +132,136 @@ class TestValueOrder {
     }
   }
 
+  @Test
+  void testDiffDeserializeMissingKeys() {
+    EnvContext.set("uat", "pro");
+    try {
+      DiffValueOrder diff1 = JacksonUtils.toObj("{\"uat\":\"asc\"}", new TypeReference<DiffValueOrder>() {});
+      Assertions.assertEquals("asc", diff1.getSource());
+      Assertions.assertNull(diff1.getTarget());
+
+      DiffValueOrder diff2 = JacksonUtils.toObj("{\"pro\":\"desc\"}", new TypeReference<DiffValueOrder>() {});
+      Assertions.assertNull(diff2.getSource());
+      Assertions.assertEquals("desc", diff2.getTarget());
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
+  @Test
+  void testDeepClone() {
+    Assertions.assertEquals(source, source.deepClone());
+    Assertions.assertNotSame(source, source.deepClone());
+    Assertions.assertEquals(NULL, NULL.deepClone());
+  }
+
+  @Test
+  void testDiffWithNull() {
+    Assertions.assertEquals("{\"source\":\"asc\",\"target\":null}", source.absolutelyDiff(null).diff());
+    Assertions.assertEquals(Diff.EQUALS, source.runtimeDiff(null).diff());
+  }
+
+  @Test
+  void testEqualsAndHashCode() {
+    Assertions.assertEquals(source, ValueOrder.of("asc"));
+    Assertions.assertNotEquals(source, target1);
+    Assertions.assertNotEquals(source, NULL);
+    Assertions.assertEquals(source.hashCode(), ValueOrder.of("asc").hashCode());
+  }
+
+  @Test
+  void testToString() {
+    Assertions.assertEquals("asc", source.toString());
+    Assertions.assertEquals("desc", target1.toString());
+  }
+
+  @Test
+  void testSerializeNullValue() {
+    String json = JacksonUtils.toStr((ValueOrder) null);
+    Assertions.assertNull(json);
+  }
+
+  @Test
+  void testSerializeValueWithNullContent() {
+    String json = JacksonUtils.toStr(ValueOrder.of());
+    Assertions.assertEquals("null", json);
+  }
+
+  @Test
+  void testDeserializeNullJson() {
+    ValueOrder result = JacksonUtils.toObj("null", new TypeReference<ValueOrder>() {});
+    Assertions.assertEquals(ValueOrder.of(), result);
+  }
+
+  @Test
+  void testDeserializeNullString() {
+    ValueOrder result = JacksonUtils.toObj("\"null\"", new TypeReference<ValueOrder>() {});
+    Assertions.assertEquals(ValueOrder.of(), result);
+  }
+
+  @Test
+  void testDeserializeEmptyString() {
+    ValueOrder result = JacksonUtils.toObj("\"\"", new TypeReference<ValueOrder>() {});
+    Assertions.assertEquals(ValueOrder.of(), result);
+  }
+
+  @Test
+  void testValueSerializeDeserializeRoundTrip() {
+    ValueOrder original = ValueOrder.of("asc");
+    String json = JacksonUtils.toStr(original);
+    Assertions.assertEquals("\"asc\"", json);
+    ValueOrder restored = JacksonUtils.toObj(json, new TypeReference<ValueOrder>() {});
+    Assertions.assertEquals(original, restored);
+  }
+
+  @Test
+  void testDiffSerializeNullSource() {
+    EnvContext.set("uat", "pro");
+    try {
+      DiffValueOrder diff = DiffValueOrder.of(null, "desc");
+      String json = diff.diff();
+      Assertions.assertTrue(json.contains("\"uat\":null"));
+      Assertions.assertTrue(json.contains("\"pro\":\"desc\""));
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
+  @Test
+  void testDiffSerializeNullTarget() {
+    EnvContext.set("uat", "pro");
+    try {
+      DiffValueOrder diff = DiffValueOrder.of("asc", null);
+      String json = diff.diff();
+      Assertions.assertEquals("{\"uat\":\"asc\",\"pro\":null}", json);
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
+  @Test
+  void testDiffSerializeDeserializeRoundTrip() {
+    EnvContext.set("uat", "pro");
+    try {
+      DiffValueOrder original = DiffValueOrder.of("asc", "desc");
+      String json = original.diff();
+      Assertions.assertEquals("{\"uat\":\"asc\",\"pro\":\"desc\"}", json);
+      DiffValueOrder restored = JacksonUtils.toObj(json, new TypeReference<DiffValueOrder>() {});
+      Assertions.assertEquals(original, restored);
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
+  @Test
+  void testDiffDeserializeJsonNull() {
+    EnvContext.set("uat", "pro");
+    try {
+      DiffValueOrder result = JacksonUtils.toObj("null", new TypeReference<DiffValueOrder>() {});
+      Assertions.assertEquals(DiffValueOrder.NULL, result);
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
 }

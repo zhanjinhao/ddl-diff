@@ -77,4 +77,115 @@ class TestValueBoolean {
     }
   }
 
+  @Test
+  void testDiffDeserializeMissingKeys() {
+    EnvContext.set("uat", "pro");
+    try {
+      IllegalArgumentException ex1 = Assertions.assertThrows(IllegalArgumentException.class,
+              () -> JacksonUtils.toObj("{}", new TypeReference<DiffValueBoolean>() {}));
+      Assertions.assertTrue(ex1.getMessage().contains("source: null"));
+      Assertions.assertTrue(ex1.getMessage().contains("target: null"));
+
+      IllegalArgumentException ex2 = Assertions.assertThrows(IllegalArgumentException.class,
+              () -> JacksonUtils.toObj("{\"uat\":true}", new TypeReference<DiffValueBoolean>() {}));
+      Assertions.assertTrue(ex2.getMessage().contains("source: true"));
+      Assertions.assertTrue(ex2.getMessage().contains("target: null"));
+
+      IllegalArgumentException ex3 = Assertions.assertThrows(IllegalArgumentException.class,
+              () -> JacksonUtils.toObj("{\"pro\":false}", new TypeReference<DiffValueBoolean>() {}));
+      Assertions.assertTrue(ex3.getMessage().contains("source: null"));
+      Assertions.assertTrue(ex3.getMessage().contains("target: false"));
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
+  @Test
+  void testDeepClone() {
+    Assertions.assertSame(source, source.deepClone());
+    Assertions.assertSame(target1, target1.deepClone());
+  }
+
+  @Test
+  void testDiffWithNull() {
+    Assertions.assertThrows(IllegalArgumentException.class, () -> source.absolutelyDiff(null));
+    Assertions.assertThrows(IllegalArgumentException.class, () -> source.runtimeDiff(null));
+  }
+
+  @Test
+  void testEqualsAndHashCode() {
+    Assertions.assertEquals(source, source);
+    Assertions.assertNotEquals(source, target1);
+    Assertions.assertEquals(source.hashCode(), source.hashCode());
+    Assertions.assertNotEquals(source.hashCode(), target1.hashCode());
+  }
+
+  @Test
+  void testToString() {
+    Assertions.assertEquals("true", source.toString());
+    Assertions.assertEquals("false", target1.toString());
+  }
+
+  @Test
+  void testSerializeNullValue() {
+    String json = JacksonUtils.toStr((ValueBoolean) null);
+    Assertions.assertNull(json);
+  }
+
+  @Test
+  void testSerializeValue() {
+    Assertions.assertEquals("true", JacksonUtils.toStr(ValueBoolean.TRUE));
+    Assertions.assertEquals("false", JacksonUtils.toStr(ValueBoolean.FALSE));
+  }
+
+  @Test
+  void testDeserializeNullJsonThrows() {
+    Assertions.assertThrows(IllegalArgumentException.class,
+            () -> JacksonUtils.toObj("null", new TypeReference<ValueBoolean>() {}));
+  }
+
+  @Test
+  void testDeserializeNullStringThrows() {
+    Assertions.assertThrows(IllegalArgumentException.class,
+            () -> JacksonUtils.toObj("\"null\"", new TypeReference<ValueBoolean>() {}));
+  }
+
+  @Test
+  void testDeserializeEmptyStringThrows() {
+    Assertions.assertThrows(IllegalArgumentException.class,
+            () -> JacksonUtils.toObj("\"\"", new TypeReference<ValueBoolean>() {}));
+  }
+
+  @Test
+  void testDeserializeCaseInsensitive() {
+    Assertions.assertEquals(ValueBoolean.TRUE, JacksonUtils.toObj("\"True\"", new TypeReference<ValueBoolean>() {}));
+    Assertions.assertEquals(ValueBoolean.TRUE, JacksonUtils.toObj("\"TRUE\"", new TypeReference<ValueBoolean>() {}));
+    Assertions.assertEquals(ValueBoolean.FALSE, JacksonUtils.toObj("\"False\"", new TypeReference<ValueBoolean>() {}));
+    Assertions.assertEquals(ValueBoolean.FALSE, JacksonUtils.toObj("\"FALSE\"", new TypeReference<ValueBoolean>() {}));
+  }
+
+  @Test
+  void testValueSerializeDeserializeRoundTrip() {
+    String json = JacksonUtils.toStr(ValueBoolean.TRUE);
+    Assertions.assertEquals("true", json);
+    ValueBoolean restored = JacksonUtils.toObj(json, new TypeReference<ValueBoolean>() {});
+    Assertions.assertEquals(ValueBoolean.TRUE, restored);
+
+    String json2 = JacksonUtils.toStr(ValueBoolean.FALSE);
+    Assertions.assertEquals("false", json2);
+    ValueBoolean restored2 = JacksonUtils.toObj(json2, new TypeReference<ValueBoolean>() {});
+    Assertions.assertEquals(ValueBoolean.FALSE, restored2);
+  }
+
+  @Test
+  void testDiffDeserializeJsonNull() {
+    EnvContext.set("uat", "pro");
+    try {
+      DiffValueBoolean result = JacksonUtils.toObj("null", new TypeReference<DiffValueBoolean>() {});
+      Assertions.assertEquals(DiffValueBoolean.NULL, result);
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
 }

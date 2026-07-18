@@ -28,9 +28,13 @@ public class DiffValueBooleanDeserializer extends JsonDeserializer<DiffValueBool
 
     LinkedHashMap<String, Boolean> map = JacksonUtils.toObj(s, typeReference);
 
-    return DiffValueBoolean.of(
-            map.get(EnvContext.getSourceName()),
-            map.get(EnvContext.getTargetName()));
+    Boolean source = map.get(EnvContext.getSourceName());
+    Boolean target = map.get(EnvContext.getTargetName());
+    if (source == null || target == null) {
+      throw new IllegalArgumentException(
+              String.format("only support 'true' and 'false'. source: %s, target: %s", source, target));
+    }
+    return DiffValueBoolean.of(source, target);
   }
 
   @Override

@@ -133,4 +133,136 @@ class TestValueComment {
     }
   }
 
+  @Test
+  void testDiffDeserializeMissingKeys() {
+    EnvContext.set("uat", "pro");
+    try {
+      DiffValueComment diff1 = JacksonUtils.toObj("{\"uat\":\"'c'\"}", new TypeReference<DiffValueComment>() {});
+      Assertions.assertEquals("'c'", diff1.getSource());
+      Assertions.assertNull(diff1.getTarget());
+
+      DiffValueComment diff2 = JacksonUtils.toObj("{\"pro\":\"'c'\"}", new TypeReference<DiffValueComment>() {});
+      Assertions.assertNull(diff2.getSource());
+      Assertions.assertEquals("'c'", diff2.getTarget());
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
+  @Test
+  void testDeepClone() {
+    Assertions.assertEquals(source, source.deepClone());
+    Assertions.assertNotSame(source, source.deepClone());
+    Assertions.assertEquals(NULL, NULL.deepClone());
+  }
+
+  @Test
+  void testDiffWithNull() {
+    Assertions.assertEquals("{\"source\":\"date\",\"target\":null}", source.absolutelyDiff(null).diff());
+    Assertions.assertEquals(Diff.EQUALS, source.runtimeDiff(null).diff());
+  }
+
+  @Test
+  void testEqualsAndHashCode() {
+    Assertions.assertEquals(source, ValueComment.of("date"));
+    Assertions.assertNotEquals(source, target1);
+    Assertions.assertNotEquals(source, NULL);
+    Assertions.assertEquals(source.hashCode(), ValueComment.of("date").hashCode());
+  }
+
+  @Test
+  void testToString() {
+    Assertions.assertEquals("date", source.toString());
+    Assertions.assertEquals("time", target1.toString());
+  }
+
+  @Test
+  void testSerializeNullValue() {
+    String json = JacksonUtils.toStr((ValueComment) null);
+    Assertions.assertNull(json);
+  }
+
+  @Test
+  void testSerializeValueWithNullContent() {
+    String json = JacksonUtils.toStr(ValueComment.of());
+    Assertions.assertEquals("null", json);
+  }
+
+  @Test
+  void testDeserializeNullJson() {
+    ValueComment result = JacksonUtils.toObj("null", new TypeReference<ValueComment>() {});
+    Assertions.assertEquals(ValueComment.of(), result);
+  }
+
+  @Test
+  void testDeserializeNullString() {
+    ValueComment result = JacksonUtils.toObj("\"null\"", new TypeReference<ValueComment>() {});
+    Assertions.assertEquals(ValueComment.of(), result);
+  }
+
+  @Test
+  void testDeserializeEmptyString() {
+    ValueComment result = JacksonUtils.toObj("\"\"", new TypeReference<ValueComment>() {});
+    Assertions.assertEquals(ValueComment.of(), result);
+  }
+
+  @Test
+  void testValueSerializeDeserializeRoundTrip() {
+    ValueComment original = ValueComment.of("'table comment'");
+    String json = JacksonUtils.toStr(original);
+    Assertions.assertEquals("\"'table comment'\"", json);
+    ValueComment restored = JacksonUtils.toObj(json, new TypeReference<ValueComment>() {});
+    Assertions.assertEquals(original, restored);
+  }
+
+  @Test
+  void testDiffSerializeNullSource() {
+    EnvContext.set("uat", "pro");
+    try {
+      DiffValueComment diff = DiffValueComment.of(null, "'comment'");
+      String json = diff.diff();
+      Assertions.assertEquals("{\"uat\":null,\"pro\":\"'comment'\"}", json);
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
+  @Test
+  void testDiffSerializeNullTarget() {
+    EnvContext.set("uat", "pro");
+    try {
+      DiffValueComment diff = DiffValueComment.of("'comment'", null);
+      String json = diff.diff();
+      Assertions.assertTrue(json.contains("\"uat\":\"'comment'\""));
+      Assertions.assertTrue(json.contains("\"pro\":null"));
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
+  @Test
+  void testDiffSerializeDeserializeRoundTrip() {
+    EnvContext.set("uat", "pro");
+    try {
+      DiffValueComment original = DiffValueComment.of("'a'", "'b'");
+      String json = original.diff();
+      Assertions.assertEquals("{\"uat\":\"'a'\",\"pro\":\"'b'\"}", json);
+      DiffValueComment restored = JacksonUtils.toObj(json, new TypeReference<DiffValueComment>() {});
+      Assertions.assertEquals(original, restored);
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
+  @Test
+  void testDiffDeserializeJsonNull() {
+    EnvContext.set("uat", "pro");
+    try {
+      DiffValueComment result = JacksonUtils.toObj("null", new TypeReference<DiffValueComment>() {});
+      Assertions.assertEquals(DiffValueComment.NULL, result);
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
 }
