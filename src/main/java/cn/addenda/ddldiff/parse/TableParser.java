@@ -8,6 +8,7 @@ import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
 import net.sf.jsqlparser.statement.create.table.Index;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,19 +41,21 @@ public class TableParser {
     tableBuilder.tableIndexes(parseTableIndexes(createTableStatement));
 
     List<String> tableOptionList = createTableStatement.getTableOptionsStrings();
-    for (int i = 0; i < tableOptionList.size(); i++) {
-      String tableOption = tableOptionList.get(i);
-      if (ENGINE.equalsIgnoreCase(tableOption) && i + 2 < tableOptionList.size() && EQUAL.equalsIgnoreCase(tableOptionList.get(i + 1))) {
-        tableBuilder.engine(ValueString.of(tableOptionList.get(i + 2)));
-      }
-      if (CHARSET.equalsIgnoreCase(tableOption) && i + 2 < tableOptionList.size() && EQUAL.equalsIgnoreCase(tableOptionList.get(i + 1))) {
-        tableBuilder.charset(ValueString.of(tableOptionList.get(i + 2)));
-      }
-      if (COLLATE.equalsIgnoreCase(tableOption) && i + 2 < tableOptionList.size() && EQUAL.equalsIgnoreCase(tableOptionList.get(i + 1))) {
-        tableBuilder.collate(ValueString.of(tableOptionList.get(i + 2)));
-      }
-      if (COMMENT.equalsIgnoreCase(tableOption) && i + 2 < tableOptionList.size() && EQUAL.equalsIgnoreCase(tableOptionList.get(i + 1))) {
-        tableBuilder.comment(ValueComment.of(tableOptionList.get(i + 2)));
+    if (tableOptionList != null) {
+      for (int i = 0; i < tableOptionList.size(); i++) {
+        String tableOption = tableOptionList.get(i);
+        if (ENGINE.equalsIgnoreCase(tableOption) && i + 2 < tableOptionList.size() && EQUAL.equalsIgnoreCase(tableOptionList.get(i + 1))) {
+          tableBuilder.engine(ValueString.of(tableOptionList.get(i + 2)));
+        }
+        if (CHARSET.equalsIgnoreCase(tableOption) && i + 2 < tableOptionList.size() && EQUAL.equalsIgnoreCase(tableOptionList.get(i + 1))) {
+          tableBuilder.charset(ValueString.of(tableOptionList.get(i + 2)));
+        }
+        if (COLLATE.equalsIgnoreCase(tableOption) && i + 2 < tableOptionList.size() && EQUAL.equalsIgnoreCase(tableOptionList.get(i + 1))) {
+          tableBuilder.collate(ValueString.of(tableOptionList.get(i + 2)));
+        }
+        if (COMMENT.equalsIgnoreCase(tableOption) && i + 2 < tableOptionList.size() && EQUAL.equalsIgnoreCase(tableOptionList.get(i + 1))) {
+          tableBuilder.comment(ValueComment.of(tableOptionList.get(i + 2)));
+        }
       }
     }
 
@@ -66,6 +69,9 @@ public class TableParser {
 
   private TableColumns parseTableColumns(CreateTable createTableStatement) {
     List<ColumnDefinition> columnDefinitionList = createTableStatement.getColumnDefinitions();
+    if (columnDefinitionList == null || columnDefinitionList.isEmpty()) {
+      throw new IllegalArgumentException("table has at least 1 column.");
+    }
     TableColumns tableColumns = TableColumns.of();
     for (ColumnDefinition columnDefinition : columnDefinitionList) {
 
@@ -79,6 +85,9 @@ public class TableParser {
       tableColumnBuilder.charset(ValueString.of(colDataType.getCharacterSet()));
 
       List<String> columnSpecList = columnDefinition.getColumnSpecs();
+      if (columnSpecList == null) {
+        columnSpecList = new ArrayList<>();
+      }
       for (int i = 0; i < columnSpecList.size(); i++) {
         String columnSpec = columnSpecList.get(i);
 
@@ -105,9 +114,9 @@ public class TableParser {
               if (COMMENT.equals(dv)) {
                 break;
               }
-              sb.append(dv);
+              sb.append(EMPTY).append(dv);
             }
-            tableColumnBuilder.defaultValue(ValueString.of(sb.toString()));
+            tableColumnBuilder.defaultValue(ValueString.of(sb.substring(1)));
           }
         }
       }
@@ -120,6 +129,9 @@ public class TableParser {
 
   private TableIndexes parseTableIndexes(CreateTable createTableStatement) {
     List<Index> indexList = createTableStatement.getIndexes();
+    if (indexList == null) {
+      return TableIndexes.of();
+    }
     TableIndexes tableIndexes = TableIndexes.of();
 
     for (Index index : indexList) {
