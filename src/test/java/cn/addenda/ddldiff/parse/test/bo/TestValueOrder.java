@@ -220,8 +220,7 @@ class TestValueOrder {
     try {
       DiffValueOrder diff = DiffValueOrder.of(null, "desc");
       String json = diff.diff();
-      Assertions.assertTrue(json.contains("\"uat\":null"));
-      Assertions.assertTrue(json.contains("\"pro\":\"desc\""));
+      Assertions.assertEquals("{\"uat\":null,\"pro\":\"desc\"}", json);
     } finally {
       EnvContext.remove();
     }

@@ -233,8 +233,7 @@ class TestValueComment {
     try {
       DiffValueComment diff = DiffValueComment.of("'comment'", null);
       String json = diff.diff();
-      Assertions.assertTrue(json.contains("\"uat\":\"'comment'\""));
-      Assertions.assertTrue(json.contains("\"pro\":null"));
+      Assertions.assertEquals("{\"uat\":\"'comment'\",\"pro\":null}", json);
     } finally {
       EnvContext.remove();
     }

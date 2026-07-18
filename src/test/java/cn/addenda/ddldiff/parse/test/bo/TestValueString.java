@@ -233,8 +233,7 @@ class TestValueString {
     try {
       DiffValueString diff = DiffValueString.of("utf8", null);
       String json = diff.diff();
-      Assertions.assertTrue(json.contains("\"uat\":\"utf8\""));
-      Assertions.assertTrue(json.contains("\"pro\":null"));
+      Assertions.assertEquals("{\"uat\":\"utf8\",\"pro\":null}", json);
     } finally {
       EnvContext.remove();
     }

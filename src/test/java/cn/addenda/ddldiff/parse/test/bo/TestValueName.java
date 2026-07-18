@@ -219,8 +219,7 @@ class TestValueName {
     try {
       DiffValueName diff = DiffValueName.of(null, "id");
       String json = diff.diff();
-      Assertions.assertTrue(json.contains("\"uat\":null"));
-      Assertions.assertTrue(json.contains("\"pro\":\"id\""));
+      Assertions.assertEquals("{\"uat\":null,\"pro\":\"id\"}", json);
     } finally {
       EnvContext.remove();
     }
@@ -232,8 +231,7 @@ class TestValueName {
     try {
       DiffValueName diff = DiffValueName.of("id", null);
       String json = diff.diff();
-      Assertions.assertTrue(json.contains("\"uat\":\"id\""));
-      Assertions.assertTrue(json.contains("\"pro\":null"));
+      Assertions.assertEquals("{\"uat\":\"id\",\"pro\":null}", json);
     } finally {
       EnvContext.remove();
     }

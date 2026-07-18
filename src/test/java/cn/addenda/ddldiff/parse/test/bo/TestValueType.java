@@ -239,8 +239,7 @@ class TestValueType {
     try {
       DiffValueType diff = DiffValueType.of("int", null);
       String json = diff.diff();
-      Assertions.assertTrue(json.contains("\"uat\":\"int\""));
-      Assertions.assertTrue(json.contains("\"pro\":null"));
+      Assertions.assertEquals("{\"uat\":\"int\",\"pro\":null}", json);
     } finally {
       EnvContext.remove();
     }
