@@ -36,7 +36,7 @@ public class TableIndexColumns implements DiffAble<TableIndexColumns, DiffTableI
   public TableIndexColumns deepClone() {
     TableIndexColumns tableIndexColumns = TableIndexColumns.of();
     for (TableIndexColumn tableIndexColumn : tableIndexColumnList) {
-      tableIndexColumns.addTableIndexColumn(tableIndexColumn);
+      tableIndexColumns.addTableIndexColumn(tableIndexColumn.deepClone());
     }
     return tableIndexColumns;
   }
@@ -50,7 +50,9 @@ public class TableIndexColumns implements DiffAble<TableIndexColumns, DiffTableI
   public boolean runtimeEquals(TableIndexColumns that) {
     if (that == this)
       return true;
-
+    if (that == null) {
+      that = of();
+    }
     Iterator<TableIndexColumn> iterator = this.iterator();
     Iterator<TableIndexColumn> thatIterator = that.iterator();
     while (iterator.hasNext() && thatIterator.hasNext()) {
@@ -64,6 +66,9 @@ public class TableIndexColumns implements DiffAble<TableIndexColumns, DiffTableI
 
   @Override
   public DiffTableIndexColumns absolutelyDiff(TableIndexColumns that) {
+    if (that == null) {
+      that = of();
+    }
     if (absolutelyEquals(that)) {
       return DiffTableIndexColumns.of(new ArrayList<>());
     }
@@ -73,6 +78,9 @@ public class TableIndexColumns implements DiffAble<TableIndexColumns, DiffTableI
 
   @Override
   public DiffTableIndexColumns runtimeDiff(TableIndexColumns that) {
+    if (that == null) {
+      that = of();
+    }
     if (runtimeEquals(that)) {
       return DiffTableIndexColumns.of(new ArrayList<>());
     }

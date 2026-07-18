@@ -3,6 +3,7 @@ package cn.addenda.ddldiff.parse.test.bo;
 import cn.addenda.component.base.jackson.util.JacksonUtils;
 import cn.addenda.ddldiff.bo.TableIndexColumn;
 import cn.addenda.ddldiff.bo.TableIndexColumns;
+import cn.addenda.ddldiff.bo.EnvContext;
 import cn.addenda.ddldiff.bo.ValueName;
 import cn.addenda.ddldiff.bo.ValueOrder;
 import cn.addenda.ddldiff.bo.diff.Diff;
@@ -264,6 +265,232 @@ class TestTableIndexColumns {
     System.out.println(diffString2);
 
     Assertions.assertEquals(diffString.replaceAll("\\s+", ""), diffString2.replaceAll("\\s+", ""));
+  }
+
+  @Test
+  void testDeserializeBothNameOnly() {
+    EnvContext.set("uat", "pro");
+    try {
+      String json = "{\"uat\":\"col1, col2\",\"pro\":\"col3, col4\"}";
+      TypeReference<DiffTableIndexColumns> typeReference = new TypeReference<DiffTableIndexColumns>() {};
+      DiffTableIndexColumns result = JacksonUtils.toObj(json, typeReference);
+      Assertions.assertNotNull(result);
+      Assertions.assertEquals(json, JacksonUtils.toStr(result));
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
+  @Test
+  void testDeserializeBothNameAndOrder() {
+    EnvContext.set("uat", "pro");
+    try {
+      String json = "{\"uat\":\"col1 asc, col2 desc\",\"pro\":\"col3 desc, col4 asc\"}";
+      TypeReference<DiffTableIndexColumns> typeReference = new TypeReference<DiffTableIndexColumns>() {};
+      DiffTableIndexColumns result = JacksonUtils.toObj(json, typeReference);
+      Assertions.assertNotNull(result);
+      Assertions.assertEquals(json, JacksonUtils.toStr(result));
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
+  @Test
+  void testDeserializeSourceNameAndOrderTargetNameOnly() {
+    EnvContext.set("uat", "pro");
+    try {
+      String json = "{\"uat\":\"col1 asc, col2 desc\",\"pro\":\"col3, col4\"}";
+      TypeReference<DiffTableIndexColumns> typeReference = new TypeReference<DiffTableIndexColumns>() {};
+      DiffTableIndexColumns result = JacksonUtils.toObj(json, typeReference);
+      Assertions.assertNotNull(result);
+      Assertions.assertEquals(json, JacksonUtils.toStr(result));
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
+  @Test
+  void testDeserializeSourceNameOnlyTargetNameAndOrder() {
+    EnvContext.set("uat", "pro");
+    try {
+      String json = "{\"uat\":\"col1, col2\",\"pro\":\"col3 desc, col4 asc\"}";
+      TypeReference<DiffTableIndexColumns> typeReference = new TypeReference<DiffTableIndexColumns>() {};
+      DiffTableIndexColumns result = JacksonUtils.toObj(json, typeReference);
+      Assertions.assertNotNull(result);
+      Assertions.assertEquals(json, JacksonUtils.toStr(result));
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
+  @Test
+  void testDeserializeNullSource() {
+    EnvContext.set("uat", "pro");
+    try {
+      String json = "{\"uat\":null,\"pro\":\"col1, col2\"}";
+      TypeReference<DiffTableIndexColumns> typeReference = new TypeReference<DiffTableIndexColumns>() {};
+      DiffTableIndexColumns result = JacksonUtils.toObj(json, typeReference);
+      Assertions.assertNotNull(result);
+      Assertions.assertEquals(json, JacksonUtils.toStr(result));
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
+  @Test
+  void testDeserializeNullTarget() {
+    EnvContext.set("uat", "pro");
+    try {
+      String json = "{\"uat\":\"col1, col2\",\"pro\":null}";
+      TypeReference<DiffTableIndexColumns> typeReference = new TypeReference<DiffTableIndexColumns>() {};
+      DiffTableIndexColumns result = JacksonUtils.toObj(json, typeReference);
+      Assertions.assertNotNull(result);
+      Assertions.assertEquals(json, JacksonUtils.toStr(result));
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
+  @Test
+  void testDeserializeEmptyJson() {
+    EnvContext.set("uat", "pro");
+    try {
+      String json = "{}";
+      TypeReference<DiffTableIndexColumns> typeReference = new TypeReference<DiffTableIndexColumns>() {};
+      DiffTableIndexColumns result = JacksonUtils.toObj(json, typeReference);
+      Assertions.assertEquals(DiffTableIndexColumns.NULL, result);
+      Assertions.assertEquals("{\"uat\":null,\"pro\":null}", JacksonUtils.toStr(DiffTableIndexColumns.NULL));
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
+  @Test
+  void testDeserializeNullJson() {
+    EnvContext.set("uat", "pro");
+    try {
+      String json = "null";
+      TypeReference<DiffTableIndexColumns> typeReference = new TypeReference<DiffTableIndexColumns>() {};
+      DiffTableIndexColumns result = JacksonUtils.toObj(json, typeReference);
+      Assertions.assertEquals(DiffTableIndexColumns.NULL, result);
+      Assertions.assertEquals("{\"uat\":null,\"pro\":null}", JacksonUtils.toStr(DiffTableIndexColumns.NULL));
+    } finally {
+      EnvContext.remove();
+    }
+  }
+
+  // ================================================================
+  //              补充：TableIndexColumns 自身方法
+  // ================================================================
+
+  @Test
+  void testBothEmpty() {
+    TableIndexColumns c1 = TableIndexColumns.of();
+    TableIndexColumns c2 = TableIndexColumns.of();
+    Assertions.assertEquals(true, c1.runtimeEquals(c2));
+    Assertions.assertEquals(true, c1.absolutelyEquals(c2));
+    Assertions.assertEquals(Diff.EQUALS, c1.runtimeDiff(c2).diff());
+    Assertions.assertEquals(Diff.EQUALS, c1.absolutelyDiff(c2).diff());
+  }
+
+  @Test
+  void testSelfEquals() {
+    TableIndexColumns c1 = TableIndexColumns.of(source1, source2, source3);
+    Assertions.assertEquals(true, c1.runtimeEquals(c1));
+    Assertions.assertEquals(true, c1.absolutelyEquals(c1));
+    Assertions.assertEquals(Diff.EQUALS, c1.runtimeDiff(c1).diff());
+    Assertions.assertEquals(Diff.EQUALS, c1.absolutelyDiff(c1).diff());
+  }
+
+  @Test
+  void testDeepClone() {
+    TableIndexColumns original = TableIndexColumns.of(source1, source2, source3);
+    TableIndexColumns cloned = original.deepClone();
+    Assertions.assertEquals(original, cloned);
+    Assertions.assertNotSame(original, cloned);
+
+    java.util.Iterator<TableIndexColumn> origIt = original.iterator();
+    java.util.Iterator<TableIndexColumn> cloneIt = cloned.iterator();
+    while (origIt.hasNext()) {
+      TableIndexColumn orig = origIt.next();
+      TableIndexColumn clone = cloneIt.next();
+      Assertions.assertEquals(orig, clone);
+      Assertions.assertNotSame(orig, clone);
+    }
+  }
+
+  @Test
+  void testDiffWithNull() {
+    TableIndexColumns c1 = TableIndexColumns.of(source1, source2);
+    Assertions.assertFalse(DiffTableIndexColumns.ifNull(c1.absolutelyDiff(null)));
+    Assertions.assertEquals("{\"source\":\"age  asc , name  asc \",\"target\":null}", c1.absolutelyDiff(null).diff());
+    Assertions.assertFalse(DiffTableIndexColumns.ifNull(c1.runtimeDiff(null)));
+    Assertions.assertEquals("{\"source\":\"age  asc , name  asc \",\"target\":null}", c1.absolutelyDiff(null).diff());
+  }
+
+  @Test
+  void testAddTableIndexColumnNullThrows() {
+    TableIndexColumns c1 = TableIndexColumns.of();
+    Assertions.assertThrows(UnsupportedOperationException.class, () -> c1.addTableIndexColumn(null));
+  }
+
+  @Test
+  void testOfNullVarargs() {
+    TableIndexColumns result = TableIndexColumns.of((TableIndexColumn[]) null);
+    Assertions.assertEquals(TableIndexColumns.of(), result);
+  }
+
+  @Test
+  void testOfEmpty() {
+    TableIndexColumns result = TableIndexColumns.of();
+    Assertions.assertEquals(0, result.getTableIndexColumnList().size());
+  }
+
+  @Test
+  void testEqualsAndHashCode() {
+    TableIndexColumns c1 = TableIndexColumns.of(source1, source2, source3);
+    TableIndexColumns c2 = TableIndexColumns.of(source1, source2, source3);
+    TableIndexColumns c3 = TableIndexColumns.of(source1, source2);
+    Assertions.assertEquals(c1, c2);
+    Assertions.assertNotEquals(c1, c3);
+    Assertions.assertEquals(c1.hashCode(), c2.hashCode());
+  }
+
+  // ================================================================
+  //              补充：DiffTableIndexColumns 自身方法
+  // ================================================================
+
+  @Test
+  void testDiffIfNull() {
+    Assertions.assertTrue(DiffTableIndexColumns.ifNull(null));
+    Assertions.assertTrue(DiffTableIndexColumns.ifNull(DiffTableIndexColumns.NULL));
+    Assertions.assertTrue(DiffTableIndexColumns.ifNull(
+            DiffTableIndexColumns.of(new java.util.ArrayList<>())));
+  }
+
+  @Test
+  void testDiffOfNullList() {
+    Assertions.assertEquals(DiffTableIndexColumns.NULL, DiffTableIndexColumns.of(null));
+  }
+
+  @Test
+  void testDiffOfEmptyList() {
+    Assertions.assertEquals(DiffTableIndexColumns.NULL,
+            DiffTableIndexColumns.of(new java.util.ArrayList<>()));
+  }
+
+  @Test
+  void testDiffEqualsAndHashCode() {
+    DiffTableIndexColumns NULL1 = DiffTableIndexColumns.of(new java.util.ArrayList<>());
+    DiffTableIndexColumns NULL2 = DiffTableIndexColumns.of(null);
+    Assertions.assertEquals(NULL1, NULL2);
+    Assertions.assertEquals(NULL1.hashCode(), NULL2.hashCode());
+  }
+
+  @Test
+  void testDiffToString() {
+    Assertions.assertEquals(Diff.EQUALS, DiffTableIndexColumns.NULL.toString());
+    Assertions.assertEquals(Diff.EQUALS, DiffTableIndexColumns.of(new java.util.ArrayList<>()).toString());
   }
 
 }
