@@ -72,6 +72,9 @@ public class TableIndexes implements DiffAble<TableIndexes, DiffTableIndexes>, I
 
   @Override
   public boolean runtimeEquals(TableIndexes that) {
+    if (that == null) {
+      that = of();
+    }
     that = that.deepClone();
 
     for (TableIndex tableIndex : tableIndexList) {
@@ -89,6 +92,9 @@ public class TableIndexes implements DiffAble<TableIndexes, DiffTableIndexes>, I
 
   @Override
   public DiffTableIndexes absolutelyDiff(TableIndexes that) {
+    if (that == null) {
+      that = of();
+    }
     List<DiffTableIndex> diffTableIndexList = new ArrayList<>();
 
     Iterator<TableIndex> iterator = this.iterator();
@@ -124,6 +130,9 @@ public class TableIndexes implements DiffAble<TableIndexes, DiffTableIndexes>, I
 
   @Override
   public DiffTableIndexes runtimeDiff(TableIndexes that) {
+    if (that == null) {
+      that = of();
+    }
     that = that.deepClone();
 
     List<DiffTableIndex> diffTableIndexList = new ArrayList<>();

@@ -22,7 +22,11 @@ public class TableIndexesDeserializer extends JsonDeserializer<TableIndexes> {
 
   @Override
   public TableIndexes deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
-    ArrayNode arrayNode = jp.getCodec().readTree(jp);
+    JsonNode tree = jp.getCodec().readTree(jp);
+    if (!tree.isArray()) {
+      return TableIndexes.of();
+    }
+    ArrayNode arrayNode = (ArrayNode) tree;
 
     List<JsonNode> jsonNodeList = new ArrayList<>();
     for (JsonNode next : arrayNode) {
