@@ -33,7 +33,10 @@ public class ValueType implements DiffAble<ValueType, DiffValueType> {
   @Override
   public boolean runtimeEquals(ValueType o) {
     if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (o == null) {
+      o = of();
+    }
+    if (getClass() != o.getClass()) return false;
     return Objects.equals(formatType(value), formatType(o.value));
   }
 

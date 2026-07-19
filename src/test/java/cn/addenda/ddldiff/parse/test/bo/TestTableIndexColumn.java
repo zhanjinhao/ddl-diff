@@ -289,4 +289,28 @@ class TestTableIndexColumn {
     Assertions.assertEquals(json, JacksonUtils.toStr(restored));
   }
 
+  @Test
+  void testConsistency() {
+    Assertions.assertTrue(source.runtimeEquals(target1));
+    Assertions.assertEquals("equals", source.runtimeDiff(target1).diff());
+    Assertions.assertTrue(source.absolutelyEquals(source));
+    Assertions.assertEquals("equals", source.absolutelyDiff(source).diff());
+
+    Assertions.assertFalse(source.runtimeEquals(NULL));
+    Assertions.assertNotEquals("equals", source.runtimeDiff(NULL).diff());
+    Assertions.assertFalse(source.absolutelyEquals(NULL));
+    Assertions.assertNotEquals("equals", source.absolutelyDiff(NULL).diff());
+
+    Assertions.assertTrue(NULL.runtimeEquals(NULL));
+    Assertions.assertEquals("equals", NULL.runtimeDiff(NULL).diff());
+    Assertions.assertTrue(NULL.absolutelyEquals(NULL));
+    Assertions.assertEquals("equals", NULL.absolutelyDiff(NULL).diff());
+
+    Assertions.assertFalse(NULL.runtimeEquals(source));
+    Assertions.assertFalse(NULL.absolutelyEquals(source));
+
+    Assertions.assertTrue(NULL.runtimeEquals(null));
+    Assertions.assertFalse(NULL.absolutelyEquals(null));
+  }
+
 }

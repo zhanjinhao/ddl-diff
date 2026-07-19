@@ -33,7 +33,10 @@ public class ValueOrder implements DiffAble<ValueOrder, DiffValueOrder> {
   @Override
   public boolean runtimeEquals(ValueOrder o) {
     if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (o == null) {
+      o = of();
+    }
+    if (getClass() != o.getClass()) return false;
     return Objects.equals(formatOrder(value), formatOrder(o.value));
   }
 

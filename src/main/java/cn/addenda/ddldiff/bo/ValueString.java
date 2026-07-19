@@ -31,6 +31,9 @@ public class ValueString implements DiffAble<ValueString, DiffValueString> {
 
   @Override
   public boolean runtimeEquals(ValueString that) {
+    if (that == null) {
+      that = of();
+    }
     return equals(that);
   }
 

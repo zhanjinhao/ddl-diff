@@ -188,4 +188,22 @@ class TestValueBoolean {
     }
   }
 
+  @Test
+  void testConsistency() {
+    Assertions.assertTrue(source.runtimeEquals(source));
+    Assertions.assertEquals("equals", source.runtimeDiff(source).diff());
+    Assertions.assertTrue(source.absolutelyEquals(source));
+    Assertions.assertEquals("equals", source.absolutelyDiff(source).diff());
+
+    Assertions.assertFalse(source.runtimeEquals(null));
+    Assertions.assertThrows(IllegalArgumentException.class, () -> source.runtimeDiff(null));
+    Assertions.assertFalse(source.absolutelyEquals(null));
+    Assertions.assertThrows(IllegalArgumentException.class, () -> source.absolutelyDiff(null));
+
+    Assertions.assertFalse(target1.runtimeEquals(null));
+    Assertions.assertThrows(IllegalArgumentException.class, () -> target1.runtimeDiff(null));
+    Assertions.assertFalse(target1.absolutelyEquals(null));
+    Assertions.assertThrows(IllegalArgumentException.class, () -> target1.absolutelyDiff(null));
+  }
+
 }

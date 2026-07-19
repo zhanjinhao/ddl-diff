@@ -34,7 +34,10 @@ public class TableIndexColumn implements DiffAble<TableIndexColumn, DiffTableInd
   @Override
   public boolean runtimeEquals(TableIndexColumn o) {
     if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (o == null) {
+      o = of();
+    }
+    if (getClass() != o.getClass()) return false;
     return getName().runtimeEquals(o.getName())
             && getOrder().runtimeEquals(o.getOrder());
   }
