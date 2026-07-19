@@ -36,7 +36,10 @@ public class TableIndex implements DiffAble<TableIndex, DiffTableIndex> {
   @Override
   public boolean runtimeEquals(TableIndex o) {
     if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (o == null) {
+      o = of();
+    }
+    if (getClass() != o.getClass()) return false;
     TableIndex that = o;
     return getTableIndexColumns().runtimeEquals(that.getTableIndexColumns())
             && getName().runtimeEquals(that.getName())
@@ -46,6 +49,9 @@ public class TableIndex implements DiffAble<TableIndex, DiffTableIndex> {
 
   @Override
   public DiffTableIndex absolutelyDiff(TableIndex that) {
+    if (that == null) {
+      that = of();
+    }
     return DiffTableIndex.of(
             ComparedKey.of(getName(), that.getName()),
             getTableIndexColumns().absolutelyDiff(that.getTableIndexColumns()),
@@ -56,6 +62,9 @@ public class TableIndex implements DiffAble<TableIndex, DiffTableIndex> {
 
   @Override
   public DiffTableIndex runtimeDiff(TableIndex that) {
+    if (that == null) {
+      that = TableIndex.of();
+    }
     return DiffTableIndex.of(
             ComparedKey.of(getName(), that.getName()),
             getTableIndexColumns().runtimeDiff(that.getTableIndexColumns()),
