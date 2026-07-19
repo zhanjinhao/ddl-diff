@@ -24,6 +24,9 @@ public class TableColumns implements DiffAble<TableColumns, DiffTableColumns>, I
   }
 
   public void addTableColumn(TableColumn tableColumn) {
+    if (tableColumn == null) {
+      throw new UnsupportedOperationException("can not add null.");
+    }
     this.tableColumnList.add(tableColumn);
   }
 

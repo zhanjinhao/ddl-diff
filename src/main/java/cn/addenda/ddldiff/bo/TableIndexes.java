@@ -24,6 +24,9 @@ public class TableIndexes implements DiffAble<TableIndexes, DiffTableIndexes>, I
   }
 
   public void addTableIndex(TableIndex tableIndex) {
+    if (tableIndex == null) {
+      throw new UnsupportedOperationException("can not add null.");
+    }
     tableIndexList.add(tableIndex);
   }
 
@@ -57,7 +60,7 @@ public class TableIndexes implements DiffAble<TableIndexes, DiffTableIndexes>, I
   public TableIndexes deepClone() {
     TableIndexes tableIndexes = TableIndexes.of();
     for (TableIndex tableIndex : tableIndexList) {
-      tableIndexes.addTableIndex(tableIndex);
+      tableIndexes.addTableIndex(tableIndex.deepClone());
     }
     return tableIndexes;
   }
