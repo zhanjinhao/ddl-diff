@@ -38,10 +38,10 @@ public class DiffValueOrder implements Diff {
     if (source == null && target == null) {
       return NULL;
     }
-    DiffValueOrder diffTableString = new DiffValueOrder();
-    diffTableString.setSource(source);
-    diffTableString.setTarget(target);
-    return diffTableString;
+    DiffValueOrder diffValueOrder = new DiffValueOrder();
+    diffValueOrder.setSource(source);
+    diffValueOrder.setTarget(target);
+    return diffValueOrder;
   }
 
   public static boolean ifNull(DiffValueOrder diffValueOrder) {

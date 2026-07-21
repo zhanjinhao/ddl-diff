@@ -38,10 +38,10 @@ public class DiffValueComment implements Diff {
     if (source == null && target == null) {
       return NULL;
     }
-    DiffValueComment diffdiffValueComment = new DiffValueComment();
-    diffdiffValueComment.setSource(source);
-    diffdiffValueComment.setTarget(target);
-    return diffdiffValueComment;
+    DiffValueComment diffValueComment = new DiffValueComment();
+    diffValueComment.setSource(source);
+    diffValueComment.setTarget(target);
+    return diffValueComment;
   }
 
   public static boolean ifNull(DiffValueComment diffValueComment) {
