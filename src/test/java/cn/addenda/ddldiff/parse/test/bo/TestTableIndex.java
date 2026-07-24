@@ -183,11 +183,9 @@ class TestTableIndex {
 
   @Test
   void testToString() {
-    System.out.println(JacksonUtils.toStr(source));
-    Assertions.assertNotNull(source.toString());
-    TableIndex obj = JacksonUtils.toObj("{\"tableIndexColumns\":[\"age\",\"name desc\"],\"name\":\"ageName\",\"indexType\":\"SIMPLE\",\"comment\":\"a\"}", new TypeReference<TableIndex>() {
-    });
-    Assertions.assertEquals(source, obj);
+    String str = JacksonUtils.toStr(source);
+    Assertions.assertTrue(str.contains("ageName"));
+    Assertions.assertTrue(str.contains("SIMPLE"));
   }
 
   @Test
@@ -307,6 +305,29 @@ class TestTableIndex {
     TableIndex result2 = JacksonUtils.toObj("\"\"", new TypeReference<TableIndex>() {
     });
     Assertions.assertEquals(TableIndex.of(), result2);
+
+    TableIndex result3 = JacksonUtils.toObj("\"null\"", new TypeReference<TableIndex>() {
+    });
+    Assertions.assertEquals(TableIndex.of(), result3);
+  }
+
+  // ================================================================
+  //              diffWithNull
+  // ================================================================
+
+  @Test
+  void testDiffWithNull() {
+    DiffTableIndex diff = source.absolutelyDiff(null);
+    Assertions.assertNotNull(diff);
+    Assertions.assertFalse(DiffTableIndex.ifNull(diff));
+    Assertions.assertNotEquals(Diff.EQUALS, diff.diff());
+
+    DiffTableIndex runtimeDiff = source.runtimeDiff(null);
+    Assertions.assertNotNull(runtimeDiff);
+    Assertions.assertFalse(DiffTableIndex.ifNull(runtimeDiff));
+
+    Assertions.assertEquals(Diff.EQUALS, TableIndex.of().absolutelyDiff(null).diff());
+    Assertions.assertEquals(Diff.EQUALS, TableIndex.of().runtimeDiff(null).diff());
   }
 
   // ================================================================

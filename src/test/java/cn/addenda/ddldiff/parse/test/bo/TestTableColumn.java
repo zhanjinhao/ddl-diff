@@ -354,6 +354,133 @@ class TestTableColumn {
 
     TableColumn result2 = JacksonUtils.toObj("\"\"", new TypeReference<TableColumn>() {});
     Assertions.assertEquals(TableColumn.of(), result2);
+
+    TableColumn result3 = JacksonUtils.toObj("\"null\"", new TypeReference<TableColumn>() {});
+    Assertions.assertEquals(TableColumn.of(), result3);
+  }
+
+  // ================================================================
+  //              TableColumn of / builder
+  // ================================================================
+
+  @Test
+  void testOf() {
+    TableColumn col = TableColumn.of(ValueName.of("name"), ValueType.of("int"),
+            ValueString.of("utf8"), ValueString.of("gbk"),
+            ValueString.of("0"), ValueBoolean.FALSE,
+            ValueBoolean.FALSE, ValueComment.of("c"));
+    Assertions.assertEquals(ValueName.of("name"), col.getName());
+    Assertions.assertEquals(ValueType.of("int"), col.getType());
+    Assertions.assertEquals(ValueString.of("utf8"), col.getCharset());
+    Assertions.assertEquals(ValueString.of("gbk"), col.getCollate());
+    Assertions.assertEquals(ValueString.of("0"), col.getDefaultValue());
+    Assertions.assertEquals(ValueBoolean.FALSE, col.getIfNullable());
+    Assertions.assertEquals(ValueBoolean.FALSE, col.getIfAutoIncrement());
+    Assertions.assertEquals(ValueComment.of("c"), col.getComment());
+  }
+
+  @Test
+  void testBuilder() {
+    TableColumn col = TableColumn.builder()
+            .name(ValueName.of("name"))
+            .type(ValueType.of("int"))
+            .charset(ValueString.of("utf8"))
+            .build();
+    Assertions.assertEquals(ValueName.of("name"), col.getName());
+    Assertions.assertEquals(ValueType.of("int"), col.getType());
+    Assertions.assertEquals(ValueString.of("utf8"), col.getCharset());
+    Assertions.assertEquals(TableColumn.of().getCollate(), col.getCollate());
+  }
+
+  // ================================================================
+  //              TableColumn deepClone / equals / toString
+  // ================================================================
+
+  @Test
+  void testDeepClone() {
+    TableColumn cloned = source.deepClone();
+    Assertions.assertEquals(source, cloned);
+    Assertions.assertNotSame(source, cloned);
+    Assertions.assertNotSame(source.getName(), cloned.getName());
+    Assertions.assertNotSame(source.getType(), cloned.getType());
+  }
+
+  @Test
+  void testEqualsAndHashCode() {
+    TableColumn same = TableColumn.builder()
+            .name(ValueName.of("age"))
+            .type(ValueType.of("int"))
+            .charset(ValueString.of("utf8mb4"))
+            .collate(ValueString.of("utf8mb4_general_ci"))
+            .defaultValue(ValueString.of("0"))
+            .ifNullable(ValueBoolean.FALSE)
+            .ifAutoIncrement(ValueBoolean.FALSE)
+            .comment(ValueComment.of("年龄"))
+            .build();
+    Assertions.assertEquals(source, same);
+    Assertions.assertEquals(source.hashCode(), same.hashCode());
+    Assertions.assertNotEquals(source, targetN);
+  }
+
+  @Test
+  void testToString() {
+    String str = JacksonUtils.toStr(source);
+    Assertions.assertTrue(str.contains("age"));
+    Assertions.assertTrue(str.contains("int"));
+  }
+
+  // ================================================================
+  //              TableColumn serialize null
+  // ================================================================
+
+  @Test
+  void testTableColumnSerializeNull() {
+    String json = JacksonUtils.toStr((TableColumn) null);
+    Assertions.assertNull(json);
+  }
+
+  // ================================================================
+  //              DiffTableColumn deserialize null / ""
+  // ================================================================
+
+  @Test
+  void testDiffDeserializeJsonNull() {
+    DiffTableColumn result = JacksonUtils.toObj("null", new TypeReference<DiffTableColumn>() {});
+    Assertions.assertTrue(DiffTableColumn.ifNull(result));
+
+    DiffTableColumn result2 = JacksonUtils.toObj("\"\"", new TypeReference<DiffTableColumn>() {});
+    Assertions.assertTrue(DiffTableColumn.ifNull(result2));
+  }
+
+  // ================================================================
+  //              diffWithNull / consistency
+  // ================================================================
+
+  @Test
+  void testDiffWithNull() {
+    Assertions.assertNotEquals(Diff.EQUALS, source.absolutelyDiff(null).diff());
+    Assertions.assertNotEquals(Diff.EQUALS, source.runtimeDiff(null).diff());
+    Assertions.assertEquals(Diff.EQUALS, TableColumn.of().absolutelyDiff(null).diff());
+    Assertions.assertEquals(Diff.EQUALS, TableColumn.of().runtimeDiff(null).diff());
+  }
+
+  @Test
+  void testConsistency() {
+    Assertions.assertTrue(source.runtimeEquals(source));
+    Assertions.assertEquals(Diff.EQUALS, source.runtimeDiff(source).diff());
+    Assertions.assertTrue(source.absolutelyEquals(source));
+    Assertions.assertEquals(Diff.EQUALS, source.absolutelyDiff(source).diff());
+
+    Assertions.assertFalse(source.runtimeEquals(targetN));
+    Assertions.assertNotEquals(Diff.EQUALS, source.runtimeDiff(targetN).diff());
+    Assertions.assertFalse(source.absolutelyEquals(targetN));
+    Assertions.assertNotEquals(Diff.EQUALS, source.absolutelyDiff(targetN).diff());
+
+    TableColumn empty = TableColumn.of();
+    Assertions.assertTrue(empty.runtimeEquals(empty));
+    Assertions.assertEquals(Diff.EQUALS, empty.runtimeDiff(empty).diff());
+    Assertions.assertTrue(empty.absolutelyEquals(empty));
+    Assertions.assertEquals(Diff.EQUALS, empty.absolutelyDiff(empty).diff());
   }
 
 }

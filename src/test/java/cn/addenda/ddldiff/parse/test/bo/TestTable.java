@@ -636,6 +636,10 @@ class TestTable {
     Table result2 = JacksonUtils.toObj("\"\"", new TypeReference<Table>() {
     });
     Assertions.assertEquals(NULL, result2);
+
+    Table result3 = JacksonUtils.toObj("\"null\"", new TypeReference<Table>() {
+    });
+    Assertions.assertEquals(NULL, result3);
   }
 
   // ================================================================
@@ -684,6 +688,34 @@ class TestTable {
             () -> JacksonUtils.toObj("\"foobar\"", new TypeReference<DiffTable>() {
             }));
     Assertions.assertTrue(e.getMessage().contains("Can not deserialize \"foobar\" to class cn.addenda.ddldiff.bo.diff.DiffTable"));
+  }
+
+  // ================================================================
+  //              DiffTable deserialize null / ""
+  // ================================================================
+
+  @Test
+  void testDiffDeserializeJsonNull() {
+    DiffTable result = JacksonUtils.toObj("null", new TypeReference<DiffTable>() {
+    });
+    Assertions.assertTrue(DiffTable.ifNull(result));
+
+    DiffTable result2 = JacksonUtils.toObj("\"\"", new TypeReference<DiffTable>() {
+    });
+    Assertions.assertTrue(DiffTable.ifNull(result2));
+  }
+
+  // ================================================================
+  //              Table toString
+  // ================================================================
+
+  @Test
+  void testToString() {
+    TableParser tableParser = new TableParser();
+    Table table1 = tableParser.parse(ddl1);
+    String str = JacksonUtils.toStr(table1);
+    Assertions.assertTrue(str.contains("t_closure_table"));
+    Assertions.assertTrue(str.contains("InnoDB"));
   }
 
 }

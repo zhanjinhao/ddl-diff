@@ -341,6 +341,99 @@ class TestTableColumns {
 
     TableColumns result2 = JacksonUtils.toObj("\"\"", new TypeReference<TableColumns>() {});
     Assertions.assertEquals(TableColumns.of(), result2);
+
+    TableColumns result3 = JacksonUtils.toObj("\"null\"", new TypeReference<TableColumns>() {});
+    Assertions.assertEquals(TableColumns.of(), result3);
+  }
+
+  // ================================================================
+  //              TableColumns deepClone / equals / toString / of
+  // ================================================================
+
+  @Test
+  void testDeepClone() {
+    TableColumns original = TableColumns.of(source, target1);
+    TableColumns cloned = original.deepClone();
+    Assertions.assertEquals(original, cloned);
+    Assertions.assertNotSame(original, cloned);
+  }
+
+  @Test
+  void testEqualsAndHashCode() {
+    TableColumns c1 = TableColumns.of(source, target1);
+    TableColumns c2 = TableColumns.of(source, target1);
+    TableColumns c3 = TableColumns.of(targetN);
+    Assertions.assertEquals(c1, c2);
+    Assertions.assertEquals(c1.hashCode(), c2.hashCode());
+    Assertions.assertNotEquals(c1, c3);
+  }
+
+  @Test
+  void testToString() {
+    TableColumns cols = TableColumns.of(source);
+    String str = JacksonUtils.toStr(cols);
+    Assertions.assertTrue(str.contains("age"));
+    Assertions.assertTrue(str.contains("int"));
+  }
+
+  @Test
+  void testOf() {
+    TableColumns cols = TableColumns.of(source, targetN);
+    Assertions.assertEquals(2, cols.columnSize());
+    Assertions.assertEquals(0, TableColumns.of().columnSize());
+  }
+
+  // ================================================================
+  //              TableColumns serialize null
+  // ================================================================
+
+  @Test
+  void testTableColumnsSerializeNull() {
+    String json = JacksonUtils.toStr((TableColumns) null);
+    Assertions.assertNull(json);
+  }
+
+  // ================================================================
+  //              DiffTableColumns deserialize null / ""
+  // ================================================================
+
+  @Test
+  void testDiffDeserializeJsonNull() {
+    DiffTableColumns result = JacksonUtils.toObj("null", new TypeReference<DiffTableColumns>() {});
+    Assertions.assertTrue(DiffTableColumns.ifNull(result));
+
+    DiffTableColumns result2 = JacksonUtils.toObj("\"\"", new TypeReference<DiffTableColumns>() {});
+    Assertions.assertTrue(DiffTableColumns.ifNull(result2));
+  }
+
+  // ================================================================
+  //              diffWithNull / consistency
+  // ================================================================
+
+  @Test
+  void testDiffWithNull() {
+    TableColumns list = TableColumns.of(source);
+    Assertions.assertNotEquals(Diff.EQUALS, list.absolutelyDiff(null).diff());
+    Assertions.assertNotEquals(Diff.EQUALS, list.runtimeDiff(null).diff());
+    Assertions.assertEquals(Diff.EQUALS, TableColumns.of().absolutelyDiff(null).diff());
+    Assertions.assertEquals(Diff.EQUALS, TableColumns.of().runtimeDiff(null).diff());
+  }
+
+  @Test
+  void testConsistency() {
+    TableColumns list = TableColumns.of(source, targetN);
+    Assertions.assertTrue(list.runtimeEquals(list));
+    Assertions.assertEquals(Diff.EQUALS, list.runtimeDiff(list).diff());
+    Assertions.assertTrue(list.absolutelyEquals(list));
+    Assertions.assertEquals(Diff.EQUALS, list.absolutelyDiff(list).diff());
+
+    TableColumns empty = TableColumns.of();
+    Assertions.assertTrue(empty.runtimeEquals(empty));
+    Assertions.assertEquals(Diff.EQUALS, empty.runtimeDiff(empty).diff());
+    Assertions.assertTrue(empty.absolutelyEquals(empty));
+    Assertions.assertEquals(Diff.EQUALS, empty.absolutelyDiff(empty).diff());
+
+    Assertions.assertTrue(empty.runtimeEquals(null));
   }
 
   // ================================================================
@@ -373,6 +466,42 @@ class TestTableColumns {
     MismatchedInputException e = Assertions.assertThrows(MismatchedInputException.class,
             () -> JacksonUtils.toObj("\"foobar\"", new TypeReference<DiffTableColumns>() {}));
     Assertions.assertTrue(e.getMessage().contains("Can not deserialize \"foobar\" to class cn.addenda.ddldiff.bo.diff.DiffTableColumns"));
+  }
+
+  // ================================================================
+  //              DiffTableColumns 序列化 null / ifNull / equals / toString
+  // ================================================================
+
+  @Test
+  void testDiffTableColumnsSerializeNull() {
+    String json = JacksonUtils.toStr((DiffTableColumns) null);
+    Assertions.assertNull(json);
+  }
+
+  @Test
+  void testDiffTableColumnsIfNull() {
+    Assertions.assertTrue(DiffTableColumns.ifNull(null));
+    Assertions.assertTrue(DiffTableColumns.ifNull(DiffTableColumns.NULL));
+    Assertions.assertTrue(DiffTableColumns.ifNull(DiffTableColumns.of(null)));
+    Assertions.assertFalse(DiffTableColumns.ifNull(
+            TableColumns.of(source).runtimeDiff(TableColumns.of(targetN))));
+  }
+
+  @Test
+  void testDiffTableColumnsEqualsAndHashCode() {
+    DiffTableColumns d1 = TableColumns.of(source).absolutelyDiff(TableColumns.of(targetN));
+    DiffTableColumns d2 = TableColumns.of(source).absolutelyDiff(TableColumns.of(targetN));
+    Assertions.assertEquals(d1, d2);
+    Assertions.assertEquals(d1.hashCode(), d2.hashCode());
+  }
+
+  @Test
+  void testDiffTableColumnsToString() {
+    Assertions.assertEquals(Diff.EQUALS, DiffTableColumns.NULL.toString());
+    Assertions.assertEquals(Diff.EQUALS, DiffTableColumns.of(null).toString());
+
+    DiffTableColumns nonNull = TableColumns.of(source).runtimeDiff(TableColumns.of(targetN));
+    Assertions.assertTrue(nonNull.toString().contains("columnName"));
   }
 
 }

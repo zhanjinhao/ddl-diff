@@ -203,7 +203,9 @@ class TestTableIndexColumn {
 
   @Test
   void testToString() {
-    Assertions.assertNotNull(source.toString());
+    String str = JacksonUtils.toStr(source);
+    Assertions.assertTrue(str.contains("age"));
+    Assertions.assertTrue(str.contains("asc"));
   }
 
   // ================================================================

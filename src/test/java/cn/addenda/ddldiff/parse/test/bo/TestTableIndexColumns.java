@@ -549,4 +549,74 @@ class TestTableIndexColumns {
     Assertions.assertTrue(e.getMessage().contains("Can not deserialize \"foobar\" to class cn.addenda.ddldiff.bo.diff.DiffTableIndexColumns"));
   }
 
+  @Test
+  void testDiffDeserializeJsonNull() {
+    DiffTableIndexColumns result = JacksonUtils.toObj("null", new TypeReference<DiffTableIndexColumns>() {});
+    Assertions.assertTrue(DiffTableIndexColumns.ifNull(result));
+
+    DiffTableIndexColumns result2 = JacksonUtils.toObj("\"\"", new TypeReference<DiffTableIndexColumns>() {});
+    Assertions.assertTrue(DiffTableIndexColumns.ifNull(result2));
+  }
+
+  // ================================================================
+  //              TableIndexColumns of (normal)
+  // ================================================================
+
+  @Test
+  void testOf() {
+    TableIndexColumns cols = TableIndexColumns.of(source1, source2, source3);
+    Assertions.assertEquals(3, cols.getTableIndexColumnList().size());
+  }
+
+  // ================================================================
+  //              TableIndexColumns 序列化 / 反序列化 null / ""
+  // ================================================================
+
+  @Test
+  void testTableIndexColumnsDeserializeNull() {
+    TableIndexColumns result = JacksonUtils.toObj("null", new TypeReference<TableIndexColumns>() {});
+    Assertions.assertEquals(TableIndexColumns.of(), result);
+
+    TableIndexColumns result2 = JacksonUtils.toObj("\"\"", new TypeReference<TableIndexColumns>() {});
+    Assertions.assertEquals(TableIndexColumns.of(), result2);
+
+    TableIndexColumns result3 = JacksonUtils.toObj("\"null\"", new TypeReference<TableIndexColumns>() {});
+    Assertions.assertEquals(TableIndexColumns.of(), result3);
+  }
+
+  // ================================================================
+  //              TableIndexColumns toString / serialize null
+  // ================================================================
+
+  @Test
+  void testToString() {
+    TableIndexColumns cols = TableIndexColumns.of(source1, source2);
+    String str = JacksonUtils.toStr(cols);
+    Assertions.assertTrue(str.contains("age"));
+    Assertions.assertTrue(str.contains("name"));
+  }
+
+  @Test
+  void testTableIndexColumnsSerializeNull() {
+    String json = JacksonUtils.toStr((TableIndexColumns) null);
+    Assertions.assertNull(json);
+  }
+
+  // ================================================================
+  //              consistency
+  // ================================================================
+
+  @Test
+  void testConsistency() {
+    TableIndexColumns list = TableIndexColumns.of(source1, source2);
+    Assertions.assertTrue(list.runtimeEquals(list));
+    Assertions.assertEquals(Diff.EQUALS, list.runtimeDiff(list).diff());
+    Assertions.assertTrue(list.absolutelyEquals(list));
+    Assertions.assertEquals(Diff.EQUALS, list.absolutelyDiff(list).diff());
+
+    TableIndexColumns empty = TableIndexColumns.of();
+    Assertions.assertTrue(empty.runtimeEquals(empty));
+    Assertions.assertEquals(Diff.EQUALS, empty.runtimeDiff(empty).diff());
+  }
+
 }

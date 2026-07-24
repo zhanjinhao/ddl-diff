@@ -465,6 +465,18 @@ class TestTableIndexes {
   }
 
   // ================================================================
+  //              TableIndexes toString / builder
+  // ================================================================
+
+  @Test
+  void testToString() {
+    TableIndexes indexes = TableIndexes.of(source);
+    String str = JacksonUtils.toStr(indexes);
+    Assertions.assertTrue(str.contains("idx_age"));
+    Assertions.assertTrue(str.contains("SIMPLE"));
+  }
+
+  // ================================================================
   //              TableIndexes 序列化 / 反序列化
   // ================================================================
 
@@ -495,6 +507,10 @@ class TestTableIndexes {
     TableIndexes result2 = JacksonUtils.toObj("\"\"", new TypeReference<TableIndexes>() {
     });
     Assertions.assertEquals(TableIndexes.of(), result2);
+
+    TableIndexes result3 = JacksonUtils.toObj("\"null\"", new TypeReference<TableIndexes>() {
+    });
+    Assertions.assertEquals(TableIndexes.of(), result3);
   }
 
   @Test

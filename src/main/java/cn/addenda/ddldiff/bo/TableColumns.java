@@ -72,6 +72,9 @@ public class TableColumns implements DiffAble<TableColumns, DiffTableColumns>, I
 
   @Override
   public boolean runtimeEquals(TableColumns that) {
+    if (that == null) {
+      that = TableColumns.of();
+    }
     that = that.deepClone();
 
     for (TableColumn tableColumn : tableColumnList) {
@@ -89,6 +92,9 @@ public class TableColumns implements DiffAble<TableColumns, DiffTableColumns>, I
 
   @Override
   public DiffTableColumns absolutelyDiff(TableColumns that) {
+    if (that == null) {
+      that = TableColumns.of();
+    }
     List<DiffTableColumn> diffTableColumnList = new ArrayList<>();
 
     Iterator<TableColumn> iterator = this.iterator();
@@ -124,6 +130,9 @@ public class TableColumns implements DiffAble<TableColumns, DiffTableColumns>, I
 
   @Override
   public DiffTableColumns runtimeDiff(TableColumns that) {
+    if (that == null) {
+      that = TableColumns.of();
+    }
     that = that.deepClone();
 
     List<DiffTableColumn> diffTableColumnList = new ArrayList<>();
