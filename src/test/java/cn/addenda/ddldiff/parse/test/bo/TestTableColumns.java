@@ -6,6 +6,7 @@ import cn.addenda.ddldiff.bo.*;
 import cn.addenda.ddldiff.bo.diff.Diff;
 import cn.addenda.ddldiff.bo.diff.DiffTableColumns;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -314,6 +315,64 @@ class TestTableColumns {
     System.out.println(diffTableColumns);
 
     Assertions.assertEquals(JacksonUtils.formatJson(diffString), JacksonUtils.formatJson(diffTableColumns.diff()));
+  }
+
+  // ================================================================
+  //              TableColumns 序列化 / 反序列化 round-trip
+  // ================================================================
+
+  @Test
+  void testTableColumnsSerializeDeserializeRoundTrip() {
+    TableColumns original = TableColumns.of(source, target1, target2, targetN);
+    String json = JacksonUtils.toStr(original);
+    TableColumns restored = JacksonUtils.toObj(json, new TypeReference<TableColumns>() {
+    });
+    Assertions.assertEquals(original, restored);
+  }
+
+  // ================================================================
+  //              TableColumns 序列化 / 反序列化 null / ""
+  // ================================================================
+
+  @Test
+  void testTableColumnsDeserializeNull() {
+    TableColumns result = JacksonUtils.toObj("null", new TypeReference<TableColumns>() {});
+    Assertions.assertEquals(TableColumns.of(), result);
+
+    TableColumns result2 = JacksonUtils.toObj("\"\"", new TypeReference<TableColumns>() {});
+    Assertions.assertEquals(TableColumns.of(), result2);
+  }
+
+  // ================================================================
+  //              DiffTableColumns 序列化 / 反序列化 round-trip
+  // ================================================================
+
+  @Test
+  void testDiffTableColumnsSerializeDeserializeRoundTrip() {
+    TableColumns list1 = TableColumns.of(source, target1, target2);
+    TableColumns list2 = TableColumns.of(targetN, target2, target1);
+    DiffTableColumns original = list1.absolutelyDiff(list2);
+    String json = original.diff();
+    Assertions.assertNotNull(json);
+    Assertions.assertNotEquals(Diff.EQUALS, json);
+
+    DiffTableColumns restored = JacksonUtils.toObj(json, new TypeReference<DiffTableColumns>() {
+    });
+    Assertions.assertEquals(original, restored);
+  }
+
+  @Test
+  void testDeserializeEqualsRoundTrip() {
+    Assertions.assertEquals(Diff.EQUALS, DiffTableColumns.NULL.diff());
+    DiffTableColumns restored = JacksonUtils.toObj(Diff.EQUALS, new TypeReference<DiffTableColumns>() {});
+    Assertions.assertTrue(DiffTableColumns.ifNull(restored));
+  }
+
+  @Test
+  void testDeserializeInvalidStringThrows() {
+    MismatchedInputException e = Assertions.assertThrows(MismatchedInputException.class,
+            () -> JacksonUtils.toObj("\"foobar\"", new TypeReference<DiffTableColumns>() {}));
+    Assertions.assertTrue(e.getMessage().contains("Can not deserialize \"foobar\" to class cn.addenda.ddldiff.bo.diff.DiffTableColumns"));
   }
 
 }

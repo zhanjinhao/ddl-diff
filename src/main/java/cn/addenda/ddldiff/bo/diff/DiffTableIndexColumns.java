@@ -3,7 +3,7 @@ package cn.addenda.ddldiff.bo.diff;
 import cn.addenda.component.base.jackson.util.JacksonUtils;
 import cn.addenda.ddldiff.jackson.deserializer.diff.DiffTableIndexColumnsDeserializer;
 import cn.addenda.ddldiff.jackson.serializer.diff.DiffTableIndexColumnsSerializer;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Getter;
@@ -22,7 +22,7 @@ public class DiffTableIndexColumns implements Diff, Iterable<DiffTableIndexColum
 
   public static final DiffTableIndexColumns NULL = new DiffTableIndexColumns();
 
-  @JsonIgnore
+  @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
   private List<DiffTableIndexColumn> diffTableIndexColumnList = new ArrayList<>();
 
   private DiffTableIndexColumns() {

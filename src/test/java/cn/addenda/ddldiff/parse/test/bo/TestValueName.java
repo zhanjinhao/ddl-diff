@@ -6,6 +6,7 @@ import cn.addenda.ddldiff.bo.ValueName;
 import cn.addenda.ddldiff.bo.diff.Diff;
 import cn.addenda.ddldiff.bo.diff.DiffValueName;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -257,6 +258,9 @@ class TestValueName {
     try {
       DiffValueName result = JacksonUtils.toObj("null", new TypeReference<DiffValueName>() {});
       Assertions.assertEquals(DiffValueName.NULL, result);
+
+      DiffValueName result2 = JacksonUtils.toObj("\"\"", new TypeReference<DiffValueName>() {});
+      Assertions.assertEquals(DiffValueName.NULL, result2);
     } finally {
       EnvContext.remove();
     }
@@ -265,25 +269,39 @@ class TestValueName {
   @Test
   void testConsistency() {
     Assertions.assertTrue(target1.runtimeEquals(target2));
-    Assertions.assertEquals("equals", target1.runtimeDiff(target2).diff());
+    Assertions.assertEquals(Diff.EQUALS, target1.runtimeDiff(target2).diff());
     Assertions.assertTrue(source.absolutelyEquals(source));
-    Assertions.assertEquals("equals", source.absolutelyDiff(source).diff());
+    Assertions.assertEquals(Diff.EQUALS, source.absolutelyDiff(source).diff());
 
     Assertions.assertFalse(source.runtimeEquals(NULL));
-    Assertions.assertNotEquals("equals", source.runtimeDiff(NULL).diff());
+    Assertions.assertNotEquals(Diff.EQUALS, source.runtimeDiff(NULL).diff());
     Assertions.assertFalse(source.absolutelyEquals(NULL));
-    Assertions.assertNotEquals("equals", source.absolutelyDiff(NULL).diff());
+    Assertions.assertNotEquals(Diff.EQUALS, source.absolutelyDiff(NULL).diff());
 
     Assertions.assertTrue(NULL.runtimeEquals(NULL));
-    Assertions.assertEquals("equals", NULL.runtimeDiff(NULL).diff());
+    Assertions.assertEquals(Diff.EQUALS, NULL.runtimeDiff(NULL).diff());
     Assertions.assertTrue(NULL.absolutelyEquals(NULL));
-    Assertions.assertEquals("equals", NULL.absolutelyDiff(NULL).diff());
+    Assertions.assertEquals(Diff.EQUALS, NULL.absolutelyDiff(NULL).diff());
 
     Assertions.assertFalse(NULL.runtimeEquals(source));
     Assertions.assertFalse(NULL.absolutelyEquals(source));
 
     Assertions.assertTrue(NULL.runtimeEquals(null));
     Assertions.assertFalse(NULL.absolutelyEquals(null));
+  }
+
+  @Test
+  void testDeserializeEqualsRoundTrip() {
+    Assertions.assertEquals(Diff.EQUALS, DiffValueName.NULL.diff());
+    DiffValueName restored = JacksonUtils.toObj(Diff.EQUALS, new TypeReference<DiffValueName>() {});
+    Assertions.assertTrue(DiffValueName.ifNull(restored));
+  }
+
+  @Test
+  void testDeserializeInvalidStringThrows() {
+    MismatchedInputException e = Assertions.assertThrows(MismatchedInputException.class,
+            () -> JacksonUtils.toObj("\"foobar\"", new TypeReference<DiffValueName>() {}));
+    Assertions.assertTrue(e.getMessage().contains("Can not deserialize \"foobar\" to class cn.addenda.ddldiff.bo.diff.DiffValueName"));
   }
 
 }

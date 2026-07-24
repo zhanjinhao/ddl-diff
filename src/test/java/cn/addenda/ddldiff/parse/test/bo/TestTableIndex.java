@@ -3,9 +3,11 @@ package cn.addenda.ddldiff.parse.test.bo;
 import cn.addenda.component.base.jackson.util.JacksonUtils;
 import cn.addenda.ddldiff.bo.*;
 import cn.addenda.ddldiff.bo.diff.ComparedKey;
+import cn.addenda.ddldiff.bo.diff.Diff;
 import cn.addenda.ddldiff.bo.diff.DiffTableIndex;
 import cn.addenda.ddldiff.bo.diff.DiffTableIndexType;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -240,10 +242,10 @@ class TestTableIndex {
 
   @Test
   void testDiffToString() {
-    Assertions.assertEquals("equals", DiffTableIndex.of(
+    Assertions.assertEquals(Diff.EQUALS, DiffTableIndex.of(
             ComparedKey.of(ValueName.of(), ValueName.of()),
             null, null, null, null).toString());
-    Assertions.assertEquals("equals", source.absolutelyDiff(source).toString());
+    Assertions.assertEquals(Diff.EQUALS, source.absolutelyDiff(source).toString());
   }
 
   // ================================================================
@@ -255,19 +257,19 @@ class TestTableIndex {
   @Test
   void testConsistency() {
     Assertions.assertTrue(source.runtimeEquals(source));
-    Assertions.assertEquals("equals", source.runtimeDiff(source).diff());
+    Assertions.assertEquals(Diff.EQUALS, source.runtimeDiff(source).diff());
     Assertions.assertTrue(source.absolutelyEquals(source));
-    Assertions.assertEquals("equals", source.absolutelyDiff(source).diff());
+    Assertions.assertEquals(Diff.EQUALS, source.absolutelyDiff(source).diff());
 
     Assertions.assertFalse(source.runtimeEquals(NULL));
-    Assertions.assertNotEquals("equals", source.runtimeDiff(NULL).diff());
+    Assertions.assertNotEquals(Diff.EQUALS, source.runtimeDiff(NULL).diff());
     Assertions.assertFalse(source.absolutelyEquals(NULL));
-    Assertions.assertNotEquals("equals", source.absolutelyDiff(NULL).diff());
+    Assertions.assertNotEquals(Diff.EQUALS, source.absolutelyDiff(NULL).diff());
 
     Assertions.assertTrue(NULL.runtimeEquals(NULL));
-    Assertions.assertEquals("equals", NULL.runtimeDiff(NULL).diff());
+    Assertions.assertEquals(Diff.EQUALS, NULL.runtimeDiff(NULL).diff());
     Assertions.assertTrue(NULL.absolutelyEquals(NULL));
-    Assertions.assertEquals("equals", NULL.absolutelyDiff(NULL).diff());
+    Assertions.assertEquals(Diff.EQUALS, NULL.absolutelyDiff(NULL).diff());
 
     Assertions.assertFalse(NULL.runtimeEquals(source));
     Assertions.assertEquals("{\"indexName\":\"null(source)-ageName(target)\",\"diffTableIndexColumns\":{\"source\":null,\"target\":\"age, name desc\"},\"diffName\":{\"source\":null,\"target\":\"ageName\"},\"diffIndexType\":{\"source\":null,\"target\":\"SIMPLE\"}}", NULL.runtimeDiff(source).diff());
@@ -300,7 +302,11 @@ class TestTableIndex {
   void testDeserializeNull() {
     TableIndex result = JacksonUtils.toObj("null", new TypeReference<TableIndex>() {
     });
-    Assertions.assertNull(result);
+    Assertions.assertEquals(TableIndex.of(), result);
+
+    TableIndex result2 = JacksonUtils.toObj("\"\"", new TypeReference<TableIndex>() {
+    });
+    Assertions.assertEquals(TableIndex.of(), result2);
   }
 
   // ================================================================
@@ -312,12 +318,15 @@ class TestTableIndex {
     DiffTableIndex original = source.absolutelyDiff(target2);
     String json = original.diff();
     Assertions.assertNotNull(json);
-    Assertions.assertNotEquals("equals", json);
+    Assertions.assertNotEquals(Diff.EQUALS, json);
+
+    System.out.println(json);
 
     DiffTableIndex restored = JacksonUtils.toObj(json, new TypeReference<DiffTableIndex>() {
     });
     Assertions.assertNotNull(restored);
     Assertions.assertFalse(DiffTableIndex.ifNull(restored));
+    Assertions.assertEquals(original.getDiffName(), restored.getDiffName());
     Assertions.assertEquals(original.getDiffIndexType(), restored.getDiffIndexType());
     Assertions.assertEquals(original.getDiffComment(), restored.getDiffComment());
   }
@@ -326,13 +335,31 @@ class TestTableIndex {
   void testDiffDeserializeJsonNull() {
     DiffTableIndex result = JacksonUtils.toObj("null", new TypeReference<DiffTableIndex>() {
     });
-    Assertions.assertNull(result);
+    Assertions.assertTrue(DiffTableIndex.ifNull(result));
+
+    DiffTableIndex result2 = JacksonUtils.toObj("\"\"", new TypeReference<DiffTableIndex>() {
+    });
+    Assertions.assertTrue(DiffTableIndex.ifNull(result2));
   }
 
   @Test
   void testDiffSerializeNull() {
     String json = JacksonUtils.toStr((DiffTableIndex) null);
     Assertions.assertNull(json);
+  }
+
+  @Test
+  void testDeserializeEqualsRoundTrip() {
+    Assertions.assertEquals(Diff.EQUALS, DiffTableIndex.of(null, null, null, null, null).diff());
+    DiffTableIndex restored = JacksonUtils.toObj(Diff.EQUALS, new TypeReference<DiffTableIndex>() {});
+    Assertions.assertTrue(DiffTableIndex.ifNull(restored));
+  }
+
+  @Test
+  void testDeserializeInvalidStringThrows() {
+    MismatchedInputException e = Assertions.assertThrows(MismatchedInputException.class,
+            () -> JacksonUtils.toObj("\"foobar\"", new TypeReference<DiffTableIndex>() {}));
+    Assertions.assertTrue(e.getMessage().contains("Can not deserialize \"foobar\" to class cn.addenda.ddldiff.bo.diff.DiffTableIndex"));
   }
 
 }

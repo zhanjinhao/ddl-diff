@@ -6,7 +6,6 @@ import cn.addenda.ddldiff.bo.TableIndexes;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -15,18 +14,22 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TableIndexesDeserializer extends JsonDeserializer<TableIndexes> {
+public class TableIndexesDeserializer extends AbstractDiffAbleJsonDeserializer<TableIndexes> {
 
   private static final TypeReference<TableIndex> typeReference = new TypeReference<TableIndex>() {
   };
 
   @Override
   public TableIndexes deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
-    JsonNode tree = jp.getCodec().readTree(jp);
-    if (!tree.isArray()) {
-      return TableIndexes.of();
+    JsonNode jsonNode = jp.getCodec().readTree(jp);
+    if (!jsonNode.isArray()) {
+      if (ifNull(jsonNode)) {
+        return TableIndexes.of();
+      } else {
+        throw from(jp, jsonNode, TableIndexes.class);
+      }
     }
-    ArrayNode arrayNode = (ArrayNode) tree;
+    ArrayNode arrayNode = (ArrayNode) jsonNode;
 
     List<JsonNode> jsonNodeList = new ArrayList<>();
     for (JsonNode next : arrayNode) {
@@ -38,8 +41,8 @@ public class TableIndexesDeserializer extends JsonDeserializer<TableIndexes> {
     }
 
     TableIndexes of = TableIndexes.of();
-    for (JsonNode jsonNode : jsonNodeList) {
-      of.addTableIndex(JacksonUtils.toObj(jsonNode.toString(), typeReference));
+    for (JsonNode node : jsonNodeList) {
+      of.addTableIndex(JacksonUtils.toObj(node.toString(), typeReference));
     }
 
     return of;

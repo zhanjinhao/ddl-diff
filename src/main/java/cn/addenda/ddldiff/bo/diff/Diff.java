@@ -4,7 +4,7 @@ import java.util.List;
 
 public interface Diff {
 
-  String EQUALS = "equals";
+  String EQUALS = "\"equals\"";
 
   String diff();
 

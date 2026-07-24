@@ -6,7 +6,6 @@ import cn.addenda.ddldiff.bo.diff.DiffTableColumns;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -15,14 +14,22 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DiffTableColumnsDeserializer extends JsonDeserializer<DiffTableColumns> {
+public class DiffTableColumnsDeserializer extends AbstractDiffJsonDeserializer<DiffTableColumns> {
 
   private static final TypeReference<DiffTableColumn> typeReference = new TypeReference<DiffTableColumn>() {
   };
 
   @Override
   public DiffTableColumns deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
-    ArrayNode arrayNode = jp.getCodec().readTree(jp);
+    JsonNode jsonNode = jp.getCodec().readTree(jp);
+    if (!jsonNode.isArray()) {
+      if (ifNull(jsonNode)) {
+        return DiffTableColumns.NULL;
+      } else {
+        throw from(jp, jsonNode, DiffTableColumns.class);
+      }
+    }
+    ArrayNode arrayNode = (ArrayNode) jsonNode;
 
     List<JsonNode> jsonNodeList = new ArrayList<>();
     for (JsonNode next : arrayNode) {
@@ -33,8 +40,8 @@ public class DiffTableColumnsDeserializer extends JsonDeserializer<DiffTableColu
       return DiffTableColumns.NULL;
     }
     List<DiffTableColumn> diffTableColumnList = new ArrayList<>();
-    for (JsonNode jsonNode : jsonNodeList) {
-      diffTableColumnList.add(JacksonUtils.toObj(jsonNode.toString(), typeReference));
+    for (JsonNode node : jsonNodeList) {
+      diffTableColumnList.add(JacksonUtils.toObj(node.toString(), typeReference));
     }
 
     return DiffTableColumns.of(diffTableColumnList);

@@ -3,11 +3,14 @@ package cn.addenda.ddldiff.bo;
 import cn.addenda.ddldiff.bo.diff.ComparedKey;
 import cn.addenda.ddldiff.bo.diff.DiffTableIndex;
 import cn.addenda.ddldiff.bo.diff.DiffTableIndexType;
+import cn.addenda.ddldiff.jackson.deserializer.TableIndexDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 
 import java.util.Objects;
 
 @Getter
+@JsonDeserialize(using = TableIndexDeserializer.class)
 public class TableIndex implements DiffAble<TableIndex, DiffTableIndex> {
 
   public static final String PRIMARY_KEY_NAME = "_PRIMARY_KEY_";

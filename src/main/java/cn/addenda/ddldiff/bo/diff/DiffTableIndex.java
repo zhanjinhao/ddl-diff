@@ -1,9 +1,11 @@
 package cn.addenda.ddldiff.bo.diff;
 
 import cn.addenda.component.base.jackson.util.JacksonUtils;
+import cn.addenda.ddldiff.jackson.deserializer.diff.DiffTableIndexDeserializer;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,24 +17,25 @@ import java.util.Objects;
         value = {"indexName",
                 "diffTableIndexColumns", "diffName",
                 "diffIndexType", "diffComment"})
+@JsonDeserialize(using = DiffTableIndexDeserializer.class)
 public class DiffTableIndex implements Diff {
 
-  private static final DiffTableIndex NULL = new DiffTableIndex();
+  public static final DiffTableIndex NULL = new DiffTableIndex();
 
   @JsonProperty(value = "indexName")
   private ComparedKey comparedKey;
 
   @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
-  private DiffTableIndexColumns diffTableIndexColumns;
+  private DiffTableIndexColumns diffTableIndexColumns = DiffTableIndexColumns.NULL;
 
   @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
-  private DiffValueName diffName;
+  private DiffValueName diffName = DiffValueName.NULL;
 
   @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
-  private DiffTableIndexType diffIndexType;
+  private DiffTableIndexType diffIndexType = DiffTableIndexType.NULL;
 
   @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
-  private DiffValueComment diffComment;
+  private DiffValueComment diffComment = DiffValueComment.NULL;
 
   private DiffTableIndex() {
   }
@@ -52,13 +55,23 @@ public class DiffTableIndex implements Diff {
             && DiffTableIndexType.ifNull(diffIndexType) && DiffValueComment.ifNull(diffComment)) {
       return NULL;
     }
-    DiffTableIndex diffTableColumn = new DiffTableIndex();
-    diffTableColumn.setComparedKey(comparedKey);
-    diffTableColumn.setDiffTableIndexColumns(diffTableIndexColumns);
-    diffTableColumn.setDiffName(diffName);
-    diffTableColumn.setDiffIndexType(diffIndexType);
-    diffTableColumn.setDiffComment(diffComment);
-    return diffTableColumn;
+    DiffTableIndex diffTableIndex = new DiffTableIndex();
+    if (comparedKey != null) {
+      diffTableIndex.setComparedKey(comparedKey);
+    }
+    if (diffTableIndexColumns != null) {
+      diffTableIndex.setDiffTableIndexColumns(diffTableIndexColumns);
+    }
+    if (diffName != null) {
+      diffTableIndex.setDiffName(diffName);
+    }
+    if (diffIndexType != null) {
+      diffTableIndex.setDiffIndexType(diffIndexType);
+    }
+    if (diffComment != null) {
+      diffTableIndex.setDiffComment(diffComment);
+    }
+    return diffTableIndex;
   }
 
   public static boolean ifNull(DiffTableIndex diffTableIndex) {

@@ -6,6 +6,7 @@ import cn.addenda.ddldiff.bo.IndexType;
 import cn.addenda.ddldiff.bo.diff.Diff;
 import cn.addenda.ddldiff.bo.diff.DiffTableIndexType;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -107,6 +108,10 @@ class TestTableIndexType {
       DiffTableIndexType result = JacksonUtils.toObj("null", new TypeReference<DiffTableIndexType>() {
       });
       Assertions.assertEquals(DiffTableIndexType.NULL, result);
+
+      DiffTableIndexType result2 = JacksonUtils.toObj("\"\"", new TypeReference<DiffTableIndexType>() {
+      });
+      Assertions.assertEquals(DiffTableIndexType.NULL, result2);
     } finally {
       EnvContext.remove();
     }
@@ -180,6 +185,20 @@ class TestTableIndexType {
     } finally {
       EnvContext.remove();
     }
+  }
+
+  @Test
+  void testDeserializeEqualsRoundTrip() {
+    Assertions.assertEquals(Diff.EQUALS, DiffTableIndexType.NULL.diff());
+    DiffTableIndexType restored = JacksonUtils.toObj(Diff.EQUALS, new TypeReference<DiffTableIndexType>() {});
+    Assertions.assertTrue(DiffTableIndexType.ifNull(restored));
+  }
+
+  @Test
+  void testDeserializeInvalidStringThrows() {
+    MismatchedInputException e = Assertions.assertThrows(MismatchedInputException.class,
+            () -> JacksonUtils.toObj("\"foobar\"", new TypeReference<DiffTableIndexType>() {}));
+    Assertions.assertTrue(e.getMessage().contains("Can not deserialize \"foobar\" to class cn.addenda.ddldiff.bo.diff.DiffTableIndexType"));
   }
 
 }

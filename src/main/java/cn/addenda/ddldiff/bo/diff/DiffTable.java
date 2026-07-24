@@ -1,9 +1,11 @@
 package cn.addenda.ddldiff.bo.diff;
 
 import cn.addenda.component.base.jackson.util.JacksonUtils;
+import cn.addenda.ddldiff.jackson.deserializer.diff.DiffTableDeserializer;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,33 +19,34 @@ import java.util.Objects;
                 "diffTableIndexes", "diffEngine",
                 "diffCharset", "diffCollate",
                 "diffComment"})
+@JsonDeserialize(using = DiffTableDeserializer.class)
 public class DiffTable implements Diff {
 
-  private static final DiffTable NULL = new DiffTable();
+  public static final DiffTable NULL = new DiffTable();
 
   @JsonProperty(value = "tableName")
   private ComparedKey comparedKey;
 
   @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
-  private DiffValueName diffName;
+  private DiffValueName diffName = DiffValueName.NULL;
 
   @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
-  private DiffTableColumns diffTableColumns;
+  private DiffTableColumns diffTableColumns = DiffTableColumns.NULL;
 
   @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
-  private DiffTableIndexes diffTableIndexes;
+  private DiffTableIndexes diffTableIndexes = DiffTableIndexes.NULL;
 
   @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
-  private DiffValueString diffEngine;
+  private DiffValueString diffEngine = DiffValueString.NULL;
 
   @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
-  private DiffValueString diffCharset;
+  private DiffValueString diffCharset = DiffValueString.NULL;
 
   @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
-  private DiffValueString diffCollate;
+  private DiffValueString diffCollate = DiffValueString.NULL;
 
   @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
-  private DiffValueComment diffComment;
+  private DiffValueComment diffComment = DiffValueComment.NULL;
 
   private DiffTable() {
   }
@@ -69,14 +72,30 @@ public class DiffTable implements Diff {
     }
 
     DiffTable diffTable = new DiffTable();
-    diffTable.setComparedKey(comparedKey);
-    diffTable.setDiffName(diffName);
-    diffTable.setDiffTableColumns(diffTableColumns);
-    diffTable.setDiffTableIndexes(diffTableIndexes);
-    diffTable.setDiffEngine(diffEngine);
-    diffTable.setDiffCharset(diffCharset);
-    diffTable.setDiffCollate(diffCollate);
-    diffTable.setDiffComment(diffComment);
+    if (comparedKey != null) {
+      diffTable.setComparedKey(comparedKey);
+    }
+    if (diffName != null) {
+      diffTable.setDiffName(diffName);
+    }
+    if (diffTableColumns != null) {
+      diffTable.setDiffTableColumns(diffTableColumns);
+    }
+    if (diffTableIndexes != null) {
+      diffTable.setDiffTableIndexes(diffTableIndexes);
+    }
+    if (diffEngine != null) {
+      diffTable.setDiffEngine(diffEngine);
+    }
+    if (diffCharset != null) {
+      diffTable.setDiffCharset(diffCharset);
+    }
+    if (diffCollate != null) {
+      diffTable.setDiffCollate(diffCollate);
+    }
+    if (diffComment != null) {
+      diffTable.setDiffComment(diffComment);
+    }
     return diffTable;
   }
 

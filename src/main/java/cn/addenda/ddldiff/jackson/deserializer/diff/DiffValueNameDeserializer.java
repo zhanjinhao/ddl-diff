@@ -6,14 +6,13 @@ import cn.addenda.ddldiff.bo.diff.DiffValueName;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
 
-public class DiffValueNameDeserializer extends JsonDeserializer<DiffValueName> {
+public class DiffValueNameDeserializer extends AbstractDiffJsonDeserializer<DiffValueName> {
 
   private static final TypeReference<LinkedHashMap<String, String>> typeReference = new TypeReference<LinkedHashMap<String, String>>() {
   };
@@ -21,10 +20,14 @@ public class DiffValueNameDeserializer extends JsonDeserializer<DiffValueName> {
   @Override
   public DiffValueName deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
     JsonNode jsonNode = jp.getCodec().readTree(jp);
-    final String s = jsonNode.toString();
-    if (s == null || s.isEmpty() || "null".equals(s)) {
-      return DiffValueName.NULL;
+    if (!jsonNode.isObject()) {
+      if (ifNull(jsonNode)) {
+        return DiffValueName.NULL;
+      } else {
+        throw from(jp, jsonNode, DiffValueName.class);
+      }
     }
+    final String s = jsonNode.toString();
 
     LinkedHashMap<String, String> map = JacksonUtils.toObj(s, typeReference);
 

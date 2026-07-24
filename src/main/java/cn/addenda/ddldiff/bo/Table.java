@@ -2,11 +2,14 @@ package cn.addenda.ddldiff.bo;
 
 import cn.addenda.ddldiff.bo.diff.ComparedKey;
 import cn.addenda.ddldiff.bo.diff.DiffTable;
+import cn.addenda.ddldiff.jackson.deserializer.TableDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 
 import java.util.Objects;
 
 @Getter
+@JsonDeserialize(using = TableDeserializer.class)
 public class Table implements DiffAble<Table, DiffTable> {
 
   private ValueName name = ValueName.of();
@@ -23,7 +26,7 @@ public class Table implements DiffAble<Table, DiffTable> {
 
   private ValueComment comment = ValueComment.of();
 
-  public Table() {
+  private Table() {
   }
 
   @Override
@@ -42,7 +45,10 @@ public class Table implements DiffAble<Table, DiffTable> {
   @Override
   public boolean runtimeEquals(Table that) {
     if (this == that) return true;
-    if (that == null || getClass() != that.getClass()) return false;
+    if (that == null) {
+      that = of();
+    }
+    if (getClass() != that.getClass()) return false;
     return getName().runtimeEquals(that.getName())
             && getTableColumns().runtimeEquals(that.getTableColumns())
             && getTableIndexes().runtimeEquals(that.getTableIndexes())

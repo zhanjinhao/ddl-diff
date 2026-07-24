@@ -1,9 +1,11 @@
 package cn.addenda.ddldiff.bo.diff;
 
 import cn.addenda.component.base.jackson.util.JacksonUtils;
+import cn.addenda.ddldiff.jackson.deserializer.diff.DiffTableColumnDeserializer;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,36 +19,37 @@ import java.util.Objects;
                 "diffCharset", "diffCollate",
                 "diffDefaultValue", "diffIfNullable",
                 "diffIfAutoIncrement", "diffComment"})
+@JsonDeserialize(using = DiffTableColumnDeserializer.class)
 public class DiffTableColumn implements Diff {
 
-  private static final DiffTableColumn NULL = new DiffTableColumn();
+  public static final DiffTableColumn NULL = new DiffTableColumn();
 
   @JsonProperty(value = "columnName")
   private ComparedKey comparedKey;
 
   @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
-  private DiffValueName diffName;
+  private DiffValueName diffName = DiffValueName.NULL;
 
   @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
-  private DiffValueType diffType;
+  private DiffValueType diffType = DiffValueType.NULL;
 
   @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
-  private DiffValueString diffCharset;
+  private DiffValueString diffCharset = DiffValueString.NULL;
 
   @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
-  private DiffValueString diffCollate;
+  private DiffValueString diffCollate = DiffValueString.NULL;
 
   @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
-  private DiffValueString diffDefaultValue;
+  private DiffValueString diffDefaultValue = DiffValueString.NULL;
 
   @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
-  private DiffValueBoolean diffIfNullable;
+  private DiffValueBoolean diffIfNullable = DiffValueBoolean.NULL;
 
   @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
-  private DiffValueBoolean diffIfAutoIncrement;
+  private DiffValueBoolean diffIfAutoIncrement = DiffValueBoolean.NULL;
 
   @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
-  private DiffValueComment diffComment;
+  private DiffValueComment diffComment = DiffValueComment.NULL;
 
   private DiffTableColumn() {
   }
@@ -70,15 +73,33 @@ public class DiffTableColumn implements Diff {
       return NULL;
     }
     DiffTableColumn diffTableColumn = new DiffTableColumn();
-    diffTableColumn.setComparedKey(comparedKey);
-    diffTableColumn.setDiffName(diffName);
-    diffTableColumn.setDiffType(diffType);
-    diffTableColumn.setDiffCharset(diffCharset);
-    diffTableColumn.setDiffCollate(diffCollate);
-    diffTableColumn.setDiffDefaultValue(diffDefaultValue);
-    diffTableColumn.setDiffIfNullable(diffIfNullable);
-    diffTableColumn.setDiffIfAutoIncrement(diffIfAutoIncrement);
-    diffTableColumn.setDiffComment(diffComment);
+    if (comparedKey != null) {
+      diffTableColumn.setComparedKey(comparedKey);
+    }
+    if (diffName != null) {
+      diffTableColumn.setDiffName(diffName);
+    }
+    if (diffType != null) {
+      diffTableColumn.setDiffType(diffType);
+    }
+    if (diffCharset != null) {
+      diffTableColumn.setDiffCharset(diffCharset);
+    }
+    if (diffCollate != null) {
+      diffTableColumn.setDiffCollate(diffCollate);
+    }
+    if (diffDefaultValue != null) {
+      diffTableColumn.setDiffDefaultValue(diffDefaultValue);
+    }
+    if (diffIfNullable != null) {
+      diffTableColumn.setDiffIfNullable(diffIfNullable);
+    }
+    if (diffIfAutoIncrement != null) {
+      diffTableColumn.setDiffIfAutoIncrement(diffIfAutoIncrement);
+    }
+    if (diffComment != null) {
+      diffTableColumn.setDiffComment(diffComment);
+    }
     return diffTableColumn;
   }
 

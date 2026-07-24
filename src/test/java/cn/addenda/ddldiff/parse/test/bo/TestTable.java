@@ -2,9 +2,14 @@ package cn.addenda.ddldiff.parse.test.bo;
 
 import cn.addenda.component.base.jackson.util.JacksonUtils;
 import cn.addenda.ddldiff.bo.Table;
+import cn.addenda.ddldiff.bo.ValueName;
+import cn.addenda.ddldiff.bo.ValueString;
+import cn.addenda.ddldiff.bo.ValueComment;
+import cn.addenda.ddldiff.bo.diff.Diff;
 import cn.addenda.ddldiff.bo.diff.DiffTable;
 import cn.addenda.ddldiff.parse.TableParser;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -432,6 +437,253 @@ class TestTable {
 
     DiffTable diffTable2 = JacksonUtils.toObj(expected, typeReference);
     Assertions.assertEquals(diffTable.diff(), diffTable2.diff());
+  }
+
+  Table NULL = Table.of(null, null, null, null, null, null, null);
+
+  // ================================================================
+  //              Table 对象方法 (equals/hashCode/deepClone)
+  // ================================================================
+
+  @Test
+  void testEqualsAndHashCode() {
+    TableParser tableParser = new TableParser();
+    Table table1a = tableParser.parse(ddl1);
+    Table table1b = tableParser.parse(ddl1);
+    Table table2 = tableParser.parse(ddl2);
+
+    Assertions.assertEquals(table1a, table1b);
+    Assertions.assertEquals(table1a.hashCode(), table1b.hashCode());
+    Assertions.assertNotEquals(table1a, table2);
+    Assertions.assertNotEquals(table1a, NULL);
+  }
+
+  @Test
+  void testDeepClone() {
+    TableParser tableParser = new TableParser();
+    Table table1 = tableParser.parse(ddl1);
+    Table cloned = table1.deepClone();
+
+    Assertions.assertEquals(table1, cloned);
+    Assertions.assertNotSame(table1, cloned);
+    Assertions.assertNotSame(table1.getName(), cloned.getName());
+    Assertions.assertNotSame(table1.getTableColumns(), cloned.getTableColumns());
+    Assertions.assertNotSame(table1.getTableIndexes(), cloned.getTableIndexes());
+  }
+
+  // ================================================================
+  //              Table.equals 变体 (absolutelyEquals/runtimeEquals)
+  // ================================================================
+
+  @Test
+  void testAbsolutelyEquals() {
+    TableParser tableParser = new TableParser();
+    Table table1a = tableParser.parse(ddl1);
+    Table table1b = tableParser.parse(ddl1);
+    Table table2 = tableParser.parse(ddl2);
+
+    Assertions.assertTrue(table1a.absolutelyEquals(table1b));
+    Assertions.assertFalse(table1a.absolutelyEquals(table2));
+    Assertions.assertTrue(NULL
+            .absolutelyEquals(NULL));
+  }
+
+  @Test
+  void testRuntimeEquals() {
+    TableParser tableParser = new TableParser();
+    Table table1 = tableParser.parse(ddl1);
+    Table table2 = tableParser.parse(ddl2);
+
+    Assertions.assertTrue(table1.runtimeEquals(table1));
+    Assertions.assertFalse(table1.runtimeEquals(table2));
+    Assertions.assertTrue(NULL
+            .runtimeEquals(NULL));
+    Assertions.assertTrue(NULL.runtimeEquals(null));
+  }
+
+  // ================================================================
+  //              diff 两个相同表 => EQUALS
+  // ================================================================
+
+  @Test
+  void testAbsolutelyDiffIdentical() {
+    TableParser tableParser = new TableParser();
+    Table table1a = tableParser.parse(ddl1);
+    Table table1b = tableParser.parse(ddl1);
+
+    DiffTable diff = table1a.absolutelyDiff(table1b);
+    Assertions.assertEquals(Diff.EQUALS, diff.diff());
+    Assertions.assertTrue(DiffTable.ifNull(diff));
+  }
+
+  @Test
+  void testRuntimeDiffIdentical() {
+    TableParser tableParser = new TableParser();
+    Table table1a = tableParser.parse(ddl1);
+    Table table1b = tableParser.parse(ddl1);
+
+    DiffTable diff = table1a.runtimeDiff(table1b);
+    Assertions.assertEquals(Diff.EQUALS, diff.diff());
+    Assertions.assertTrue(DiffTable.ifNull(diff));
+  }
+
+  // ================================================================
+  //              diffWithNull
+  // ================================================================
+
+  @Test
+  void testDiffWithNull() {
+    TableParser tableParser = new TableParser();
+    Table table1 = tableParser.parse(ddl1);
+
+    DiffTable absolutelyDiff = table1.absolutelyDiff(null);
+    Assertions.assertNotNull(absolutelyDiff);
+    Assertions.assertFalse(DiffTable.ifNull(absolutelyDiff));
+    Assertions.assertNotEquals(Diff.EQUALS, absolutelyDiff.diff());
+
+    DiffTable runtimeDiff = table1.runtimeDiff(null);
+    Assertions.assertNotNull(runtimeDiff);
+    Assertions.assertFalse(DiffTable.ifNull(runtimeDiff));
+    Assertions.assertNotEquals(Diff.EQUALS, runtimeDiff.diff());
+
+    Table empty = NULL;
+    DiffTable emptyNullDiff = empty.absolutelyDiff(null);
+    Assertions.assertEquals(Diff.EQUALS, emptyNullDiff.diff());
+
+    DiffTable emptyNullRuntime = empty.runtimeDiff(null);
+    Assertions.assertEquals(Diff.EQUALS, emptyNullRuntime.diff());
+  }
+
+  // ================================================================
+  //              testConsistency
+  // ================================================================
+
+  @Test
+  void testConsistency() {
+    TableParser tableParser = new TableParser();
+    Table table1 = tableParser.parse(ddl1);
+    Table table2 = tableParser.parse(ddl2);
+
+    Assertions.assertTrue(table1.runtimeEquals(table1));
+    Assertions.assertEquals(Diff.EQUALS, table1.runtimeDiff(table1).diff());
+    Assertions.assertTrue(table1.absolutelyEquals(table1));
+    Assertions.assertEquals(Diff.EQUALS, table1.absolutelyDiff(table1).diff());
+
+    Assertions.assertFalse(table1.runtimeEquals(table2));
+    Assertions.assertNotEquals(Diff.EQUALS, table1.runtimeDiff(table2).diff());
+    Assertions.assertFalse(table1.absolutelyEquals(table2));
+    Assertions.assertNotEquals(Diff.EQUALS, table1.absolutelyDiff(table2).diff());
+
+    Table empty = NULL;
+    Assertions.assertTrue(empty.runtimeEquals(empty));
+    Assertions.assertEquals(Diff.EQUALS, empty.runtimeDiff(empty).diff());
+    Assertions.assertTrue(empty.absolutelyEquals(empty));
+    Assertions.assertEquals(Diff.EQUALS, empty.absolutelyDiff(empty).diff());
+
+    Assertions.assertTrue(empty.runtimeEquals(null));
+    Assertions.assertFalse(empty.absolutelyEquals(null));
+  }
+
+  // ================================================================
+  //              Table of / builder
+  // ================================================================
+
+  @Test
+  void testOf() {
+    Table table = Table.of(
+            ValueName.of("`t`"), null, null,
+            ValueString.of("InnoDB"), null, null,
+            ValueComment.of("'c'"));
+
+    Assertions.assertEquals(ValueName.of("`t`"), table.getName());
+    Assertions.assertEquals(ValueString.of("InnoDB"), table.getEngine());
+    Assertions.assertEquals(ValueComment.of("'c'"), table.getComment());
+    Assertions.assertEquals(NULL.getTableColumns(),
+            table.getTableColumns());
+  }
+
+  @Test
+  void testBuilder() {
+    Table table = Table.builder()
+            .name(ValueName.of("`t`"))
+            .engine(ValueString.of("InnoDB"))
+            .charset(ValueString.of("utf8mb4"))
+            .comment(ValueComment.of("'c'"))
+            .build();
+
+    Assertions.assertEquals(ValueName.of("`t`"), table.getName());
+    Assertions.assertEquals(ValueString.of("InnoDB"), table.getEngine());
+    Assertions.assertEquals(ValueString.of("utf8mb4"), table.getCharset());
+    Assertions.assertEquals(ValueComment.of("'c'"), table.getComment());
+  }
+
+  // ================================================================
+  //              Table 序列化 / 反序列化 null
+  // ================================================================
+
+  @Test
+  void testTableSerializeNull() {
+    String json = JacksonUtils.toStr((Table) null);
+    Assertions.assertNull(json);
+  }
+
+  @Test
+  void testTableDeserializeNull() {
+    Table result = JacksonUtils.toObj("null", new TypeReference<Table>() {
+    });
+    Assertions.assertEquals(NULL, result);
+
+    Table result2 = JacksonUtils.toObj("\"\"", new TypeReference<Table>() {
+    });
+    Assertions.assertEquals(NULL, result2);
+  }
+
+  // ================================================================
+  //              Table 序列化 / 反序列化 round-trip
+  // ================================================================
+
+  @Test
+  void testTableSerializeDeserializeRoundTrip() {
+    TableParser tableParser = new TableParser();
+    Table table1 = tableParser.parse(ddl1);
+    String json = JacksonUtils.toStr(table1);
+    Table restored = JacksonUtils.toObj(json, new TypeReference<Table>() {
+    });
+    Assertions.assertEquals(table1, restored);
+  }
+
+  // ================================================================
+  //              DiffTable 序列化 / 反序列化 round-trip
+  // ================================================================
+
+  @Test
+  void testDiffTableSerializeDeserializeRoundTrip() {
+    TableParser tableParser = new TableParser();
+    Table table1 = tableParser.parse(ddl1);
+    Table table4 = tableParser.parse(ddl4);
+    DiffTable original = table1.runtimeDiff(table4);
+    String json = original.diff();
+    Assertions.assertNotNull(json);
+    Assertions.assertNotEquals(Diff.EQUALS, json);
+
+    DiffTable restored = JacksonUtils.toObj(json, typeReference);
+    Assertions.assertEquals(original, restored);
+  }
+
+  @Test
+  void testDeserializeEqualsRoundTrip() {
+    Assertions.assertEquals(Diff.EQUALS, DiffTable.of(null, null, null, null, null, null, null, null).diff());
+    DiffTable restored = JacksonUtils.toObj(Diff.EQUALS, new TypeReference<DiffTable>() {
+    });
+    Assertions.assertTrue(DiffTable.ifNull(restored));
+  }
+
+  @Test
+  void testDeserializeInvalidStringThrows() {
+    MismatchedInputException e = Assertions.assertThrows(MismatchedInputException.class,
+            () -> JacksonUtils.toObj("\"foobar\"", new TypeReference<DiffTable>() {
+            }));
+    Assertions.assertTrue(e.getMessage().contains("Can not deserialize \"foobar\" to class cn.addenda.ddldiff.bo.diff.DiffTable"));
   }
 
 }

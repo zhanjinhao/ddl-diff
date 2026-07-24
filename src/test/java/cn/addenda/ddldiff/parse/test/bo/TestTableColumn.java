@@ -6,6 +6,7 @@ import cn.addenda.ddldiff.bo.diff.ComparedKey;
 import cn.addenda.ddldiff.bo.diff.Diff;
 import cn.addenda.ddldiff.bo.diff.DiffTableColumn;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -298,6 +299,61 @@ class TestTableColumn {
     System.out.println(diffTableColumn);
 
     Assertions.assertEquals(JacksonUtils.formatJson(json), JacksonUtils.formatJson(diffTableColumn.diff()));
+  }
+
+  // ================================================================
+  //              TableColumn 序列化 / 反序列化 round-trip
+  // ================================================================
+
+  @Test
+  void testTableColumnSerializeDeserializeRoundTrip() {
+    String json = JacksonUtils.toStr(source);
+    TableColumn restored = JacksonUtils.toObj(json, new TypeReference<TableColumn>() {
+    });
+    Assertions.assertEquals(source, restored);
+  }
+
+  // ================================================================
+  //              DiffTableColumn 序列化 / 反序列化 round-trip
+  // ================================================================
+
+  @Test
+  void testDiffTableColumnSerializeDeserializeRoundTrip() {
+    DiffTableColumn original = source.absolutelyDiff(targetN);
+    String json = original.diff();
+    Assertions.assertNotNull(json);
+    Assertions.assertNotEquals(Diff.EQUALS, json);
+
+    DiffTableColumn restored = JacksonUtils.toObj(json, new TypeReference<DiffTableColumn>() {
+    });
+    Assertions.assertEquals(original, restored);
+  }
+
+  @Test
+  void testDeserializeEqualsRoundTrip() {
+    Assertions.assertEquals(Diff.EQUALS, DiffTableColumn.of(null, null, null, null, null, null, null, null, null).diff());
+    DiffTableColumn restored = JacksonUtils.toObj(Diff.EQUALS, new TypeReference<DiffTableColumn>() {});
+    Assertions.assertTrue(DiffTableColumn.ifNull(restored));
+  }
+
+  @Test
+  void testDeserializeInvalidStringThrows() {
+    MismatchedInputException e = Assertions.assertThrows(MismatchedInputException.class,
+            () -> JacksonUtils.toObj("\"foobar\"", new TypeReference<DiffTableColumn>() {}));
+    Assertions.assertTrue(e.getMessage().contains("Can not deserialize \"foobar\" to class cn.addenda.ddldiff.bo.diff.DiffTableColumn"));
+  }
+
+  // ================================================================
+  //              TableColumn 序列化 / 反序列化 null / ""
+  // ================================================================
+
+  @Test
+  void testTableColumnDeserializeNull() {
+    TableColumn result = JacksonUtils.toObj("null", new TypeReference<TableColumn>() {});
+    Assertions.assertEquals(TableColumn.of(), result);
+
+    TableColumn result2 = JacksonUtils.toObj("\"\"", new TypeReference<TableColumn>() {});
+    Assertions.assertEquals(TableColumn.of(), result2);
   }
 
 }

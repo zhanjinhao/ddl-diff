@@ -6,14 +6,13 @@ import cn.addenda.ddldiff.bo.diff.DiffValueBoolean;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
 
-public class DiffValueBooleanDeserializer extends JsonDeserializer<DiffValueBoolean> {
+public class DiffValueBooleanDeserializer extends AbstractDiffJsonDeserializer<DiffValueBoolean> {
 
   private static final TypeReference<LinkedHashMap<String, Boolean>> typeReference = new TypeReference<LinkedHashMap<String, Boolean>>() {
   };
@@ -21,11 +20,14 @@ public class DiffValueBooleanDeserializer extends JsonDeserializer<DiffValueBool
   @Override
   public DiffValueBoolean deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
     JsonNode jsonNode = jp.getCodec().readTree(jp);
-    final String s = jsonNode.toString();
-    if (s == null || s.isEmpty() || "null".equals(s)) {
-      return DiffValueBoolean.NULL;
+    if (!jsonNode.isObject()) {
+      if (ifNull(jsonNode)) {
+        return DiffValueBoolean.NULL;
+      } else {
+        throw from(jp, jsonNode, DiffValueBoolean.class);
+      }
     }
-
+    final String s = jsonNode.toString();
     LinkedHashMap<String, Boolean> map = JacksonUtils.toObj(s, typeReference);
 
     Boolean source = map.get(EnvContext.getSourceName());

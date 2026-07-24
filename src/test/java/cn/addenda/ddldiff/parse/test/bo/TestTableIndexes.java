@@ -6,6 +6,7 @@ import cn.addenda.ddldiff.bo.*;
 import cn.addenda.ddldiff.bo.diff.Diff;
 import cn.addenda.ddldiff.bo.diff.DiffTableIndexes;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -490,7 +491,8 @@ class TestTableIndexes {
     TableIndexes result = JacksonUtils.toObj("null", new TypeReference<TableIndexes>() {
     });
     Assertions.assertEquals(TableIndexes.of(), result);
-    TableIndexes result2 = JacksonUtils.toObj("\"equals\"", new TypeReference<TableIndexes>() {
+
+    TableIndexes result2 = JacksonUtils.toObj("\"\"", new TypeReference<TableIndexes>() {
     });
     Assertions.assertEquals(TableIndexes.of(), result2);
   }
@@ -533,16 +535,18 @@ class TestTableIndexes {
     DiffTableIndexes result = JacksonUtils.toObj("null", new TypeReference<DiffTableIndexes>() {
     });
     Assertions.assertTrue(DiffTableIndexes.ifNull(result));
+
+    DiffTableIndexes result2 = JacksonUtils.toObj("\"\"", new TypeReference<DiffTableIndexes>() {
+    });
+    Assertions.assertTrue(DiffTableIndexes.ifNull(result2));
   }
 
   @Test
   void testDiffTableIndexesDeserializeEquals() {
-    DiffTableIndexes result = JacksonUtils.toObj("", new TypeReference<DiffTableIndexes>() {
+    DiffTableIndexes result = JacksonUtils.toObj("\"\"", new TypeReference<DiffTableIndexes>() {
     });
     Assertions.assertTrue(DiffTableIndexes.ifNull(result));
   }
-
-  // todo 增加equals反序列化严重
 
   @Test
   void testDiffTableIndexesDeserializeEmptyArray() {
@@ -575,6 +579,22 @@ class TestTableIndexes {
 
     DiffTableIndexes emptyNullRuntime = TableIndexes.of().runtimeDiff(null);
     Assertions.assertEquals(Diff.EQUALS, emptyNullRuntime.diff());
+  }
+
+  @Test
+  void testDeserializeEqualsRoundTrip() {
+    Assertions.assertEquals(Diff.EQUALS, DiffTableIndexes.NULL.diff());
+    DiffTableIndexes restored = JacksonUtils.toObj(Diff.EQUALS, new TypeReference<DiffTableIndexes>() {
+    });
+    Assertions.assertTrue(DiffTableIndexes.ifNull(restored));
+  }
+
+  @Test
+  void testDeserializeInvalidStringThrows() {
+    MismatchedInputException e = Assertions.assertThrows(MismatchedInputException.class,
+            () -> JacksonUtils.toObj("\"foobar\"", new TypeReference<DiffTableIndexes>() {
+            }));
+    Assertions.assertTrue(e.getMessage().contains("Can not deserialize \"foobar\" to class cn.addenda.ddldiff.bo.diff.DiffTableIndexes"));
   }
 
 }

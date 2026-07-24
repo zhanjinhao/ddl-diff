@@ -1,7 +1,9 @@
 package cn.addenda.ddldiff.bo.diff;
 
 import cn.addenda.component.base.jackson.util.JacksonUtils;
+import cn.addenda.ddldiff.jackson.deserializer.diff.DiffTableIndexColumnDeserializer;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,15 +11,16 @@ import java.util.Objects;
 
 @Getter
 @Setter
+@JsonDeserialize(using = DiffTableIndexColumnDeserializer.class)
 public class DiffTableIndexColumn implements Diff {
 
-  private static final DiffTableIndexColumn NULL = new DiffTableIndexColumn();
+  public static final DiffTableIndexColumn NULL = new DiffTableIndexColumn();
 
   @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
-  private DiffValueName diffName;
+  private DiffValueName diffName = DiffValueName.NULL;
 
   @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = NullChecker.class)
-  private DiffValueOrder diffOrder;
+  private DiffValueOrder diffOrder = DiffValueOrder.NULL;
 
   private DiffTableIndexColumn() {
   }
@@ -35,8 +38,12 @@ public class DiffTableIndexColumn implements Diff {
       return NULL;
     }
     DiffTableIndexColumn diffTableIndexColumn = new DiffTableIndexColumn();
-    diffTableIndexColumn.setDiffName(diffName);
-    diffTableIndexColumn.setDiffOrder(diffOrder);
+    if (diffName != null) {
+      diffTableIndexColumn.setDiffName(diffName);
+    }
+    if (diffOrder != null) {
+      diffTableIndexColumn.setDiffOrder(diffOrder);
+    }
     return diffTableIndexColumn;
   }
 
